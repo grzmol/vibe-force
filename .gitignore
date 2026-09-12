@@ -1,0 +1,26 @@
+# Node
+node_modules/
+npm-debug.log*
+*.tsbuildinfo
+
+# Salesforce CLI / DX generated
+.sf/
+.sfdx/
+.localdevserver/
+deploy-options.json
+*.sfdx-url.txt
+*.jwt
+server.key
+*.p12
+
+# vibe-force runtime state (per project, never committed)
+.vibeforce/state/
+.vibeforce/reports/
+.vibeforce/logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+.vscode/settings.json

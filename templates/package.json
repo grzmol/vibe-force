@@ -1,0 +1,36 @@
+{
+  "name": "replace-with-project-name",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Salesforce DX project wired to the vibe-force check runner.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "npm run test:unit",
+    "test:unit": "sfdx-lwc-jest",
+    "test:unit:watch": "sfdx-lwc-jest --watch",
+    "test:unit:debug": "sfdx-lwc-jest --debug",
+    "test:unit:coverage": "sfdx-lwc-jest -- --coverage",
+    "lint": "eslint \"force-app/**/lwc/**/*.js\" \"force-app/**/aura/**/*.js\"",
+    "format": "prettier --write \"**/*.{cls,trigger,apex,js,html,css,json,md,yml,yaml,xml}\"",
+    "format:verify": "prettier --check \"**/*.{cls,trigger,apex,js,html,css,json,md,yml,yaml,xml}\"",
+    "vf:local": "node \"${CLAUDE_PLUGIN_ROOT:-../vibe-force}/scripts/checks/vf-check.mjs\" local",
+    "vf:verify": "node \"${CLAUDE_PLUGIN_ROOT:-../vibe-force}/scripts/checks/vf-check.mjs\" verify"
+  },
+  "devDependencies": {
+    "@lwc/eslint-plugin-lwc": "^3.5.0",
+    "@prettier/plugin-xml": "^3.4.2",
+    "@salesforce/eslint-config-lwc": "^4.1.2",
+    "@salesforce/eslint-plugin-lightning": "^2.0.0",
+    "@salesforce/sfdx-lwc-jest": "^7.9.0",
+    "eslint": "^9.39.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jest": "^29.16.6",
+    "prettier": "^3.9.6",
+    "prettier-plugin-apex": "^2.3.0"
+  },
+  "volta": {
+    "node": "20.19.0"
+  }
+}

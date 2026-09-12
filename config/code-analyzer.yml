@@ -1,0 +1,148 @@
+# vibe-force Code Analyzer v5 configuration.
+#
+# Used by: node scripts/checks/vf-check.mjs analyzer
+#   sf code-analyzer run \
+#     --config-file  <plugin-root>/config/code-analyzer.yml \
+#     --workspace    <project-root> \
+#     --rule-selector "(Recommended,VibeForceApexRules)" \
+#     --severity-threshold <gates.analyzerFailSeverity> \
+#     --output-file  <tmp>/analyzer.json
+#
+# `config_root` defaults to the folder holding this file (<plugin-root>/config), so every path
+# below is relative to that folder.
+#
+# Severity levels: 1 Critical, 2 High, 3 Moderate, 4 Low, 5 Info.
+# Docs: https://developer.salesforce.com/docs/platform/salesforce-code-analyzer/guide/config-toplevel.html
+
+log_level: 3
+
+ignores:
+  files:
+    - "**/node_modules/**"
+    - "**/.sfdx/**"
+    - "**/.sf/**"
+    - "**/.vibeforce/**"
+    - "**/coverage/**"
+    - "**/jest-mocks/**"
+    - "**/staticresources/**"
+    - "**/*.min.js"
+
+engines:
+  # PMD: Apex + Visualforce + XML metadata. Needs JDK 11 or later on PATH.
+  pmd:
+    disable_engine: false
+    custom_rulesets:
+      - pmd/apex-ruleset.xml
+    file_extensions:
+      apex:
+        - .cls
+        - .trigger
+      visualforce:
+        - .page
+        - .component
+      html:
+        - .html
+        - .htm
+      javascript:
+        - .js
+        - .cjs
+        - .mjs
+      xml:
+        - .xml
+
+  # ESLint: the engine ships LWC + JavaScript base configs, so no project config is required.
+  # Set auto_discover_eslint_config: true to layer a project eslint.config.js on top.
+  eslint:
+    disable_engine: false
+    disable_lwc_base_config: false
+    disable_javascript_base_config: false
+    auto_discover_eslint_config: false
+
+  # Regex: bundled rules plus vibe-force custom rules below.
+  regex:
+    disable_engine: false
+    custom_rules:
+      VfNoSeeAllDataTrue:
+        regex: /@isTest\s*\(\s*seeAllData\s*=\s*true\s*\)/gi
+        file_extensions: [".cls"]
+        description: "Test classes must not depend on org data."
+        violation_message: "seeAllData=true couples the test to org data. Build test data in @TestSetup instead."
+        severity: "High"
+        tags: ["Recommended", "Security", "VibeForce"]
+      VfNoHardcodedSalesforceUrl:
+        regex: /https:\/\/[A-Za-z0-9-]+\.(my\.salesforce\.com|salesforce\.com|force\.com)/g
+        file_extensions: [".cls", ".trigger", ".js", ".xml"]
+        description: "Instance URLs must not be hardcoded."
+        violation_message: "Hardcoded Salesforce instance URL. Use a Named Credential or URL.getOrgDomainUrl()."
+        severity: "High"
+        tags: ["Recommended", "Security", "VibeForce"]
+      VfNoSystemDebugInProduction:
+        regex: /^\s*System\.debug\s*\(/gm
+        file_extensions: [".cls", ".trigger"]
+        description: "System.debug consumes Apex CPU time even when logs are off."
+        violation_message: "Remove System.debug or route it through a logging framework."
+        severity: "Info"
+        tags: ["VibeForce", "TechDebt"]
+      VfNoTodoInApex:
+        regex: /\/\/[ \t]*(TODO|FIXME|XXX)/gi
+        file_extensions: [".cls", ".trigger", ".apex"]
+        description: "Unfinished work must not reach a deployable branch."
+        violation_message: "TODO/FIXME marker found. Resolve it or move it to the backlog before deploying."
+        severity: "Info"
+        tags: ["VibeForce", "TechDebt"]
+
+  # RetireJS: known-vulnerable JavaScript in static resources and LWC bundles.
+  retire-js:
+    disable_engine: false
+
+  # CPD (copy-paste detection) needs a JDK and is noisy on generated metadata; opt in per project.
+  cpd:
+    disable_engine: true
+
+  # Flow Scanner needs Python 3.10+; enable it once Python is available in CI.
+  flow:
+    disable_engine: true
+
+  # Salesforce Graph Engine (sfge) does whole-program data-flow analysis for CRUD/FLS. It needs a
+  # JDK and several minutes per run, so it is off by default. Enable it for release candidates:
+  #
+  # sfge:
+  #   disable_engine: false
+  #   java_command: null
+  #   rule_thread_count: 4
+  #   rule_thread_timeout: 900000
+  #   path_expansion_limit: 0
+  sfge:
+    disable_engine: true
+
+rules:
+  # Raise the bundled CRUD/FLS and injection rules to Critical so `analyzer` blocks on them
+  # regardless of the configured fail severity.
+  pmd:
+    ApexSOQLInjection:
+      severity: "Critical"
+      tags: ["Recommended", "Security", "VibeForce"]
+    ApexCRUDViolation:
+      severity: "High"
+      tags: ["Recommended", "Security", "VibeForce"]
+    ApexSharingViolations:
+      severity: "High"
+      tags: ["Recommended", "Security", "VibeForce"]
+    OperationWithLimitsInLoop:
+      severity: "High"
+      tags: ["Recommended", "Performance", "VibeForce"]
+    AvoidHardcodingId:
+      severity: "High"
+      tags: ["Recommended", "ErrorProne", "VibeForce"]
+  eslint:
+    # LWC lifecycle and DOM-access mistakes are correctness problems, not style.
+    no-unused-vars:
+      severity: "Moderate"
+
+suppressions:
+  disable_suppressions: false
+  # Generated or vendored code that cannot be changed. Keep this list short and justified.
+  "**/staticresources/":
+    - rule_selector: "all"
+      max_suppressed_violations: null
+      reason: "Vendored third-party assets; not authored in this repository."

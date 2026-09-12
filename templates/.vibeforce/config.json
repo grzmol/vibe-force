@@ -1,0 +1,67 @@
+{
+  "apiVersion": "67.0",
+  "packageDirectories": ["force-app"],
+  "orgs": {
+    "dev": "REPLACE-dev",
+    "integration": "REPLACE-int",
+    "uat": "REPLACE-uat",
+    "prod": "REPLACE-prod"
+  },
+  "defaultOrgKey": "dev",
+  "productionAliases": ["REPLACE-prod"],
+  "gates": {
+    "apexOrgCoverageMin": 85,
+    "apexClassCoverageMin": 75,
+    "jestCoverageMin": 80,
+    "analyzerFailSeverity": 3,
+    "requireTestForApexClass": true,
+    "requireJestForLwc": true
+  },
+  "testLevels": {
+    "sandbox": "RunLocalTests",
+    "production": "RunLocalTests"
+  },
+  "hooks": {
+    "mode": "standard",
+    "blockProductionDeploy": true,
+    "blockDestructive": true,
+    "autoFormat": true,
+    "enforceOwnership": true
+  },
+  "git": {
+    "baseRef": "origin/main",
+    "fallbackRef": "HEAD~1",
+    "includeWorkingTree": true
+  },
+  "deploy": {
+    "validateStrategy": "auto",
+    "wait": 60,
+    "quickJobMaxAgeDays": 10
+  },
+  "apex": {
+    "wait": 30,
+    "coverageScope": "changed"
+  },
+  "smoke": {
+    "apexFile": "scripts/apex/smoke.apex",
+    "checkLimits": true,
+    "limitsWarnRemainingPercent": 15,
+    "logScan": true,
+    "queries": [
+      {
+        "name": "apex-classes-with-compile-errors",
+        "soql": "SELECT Id, Name, Status FROM ApexClass WHERE Status != 'Active' AND NamespacePrefix = null",
+        "toolingApi": true,
+        "expect": { "maxRecords": 0 },
+        "severityOnFail": 1
+      },
+      {
+        "name": "failed-async-jobs-last-day",
+        "soql": "SELECT Id, JobType, Status, ExtendedStatus FROM AsyncApexJob WHERE Status = 'Failed' AND CreatedDate = LAST_N_DAYS:1",
+        "toolingApi": false,
+        "expect": { "maxRecords": 0 },
+        "severityOnFail": 2
+      }
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "plugins": ["prettier-plugin-apex", "@prettier/plugin-xml"],
+  "printWidth": 120,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": ["*.cls", "*.trigger"],
+      "options": {
+        "parser": "apex",
+        "printWidth": 120,
+        "tabWidth": 4
+      }
+    },
+    {
+      "files": ["*.apex"],
+      "options": {
+        "parser": "apex-anonymous",
+        "printWidth": 120,
+        "tabWidth": 4
+      }
+    },
+    {
+      "files": ["*.html", "*.cmp", "*.page", "*.component"],
+      "options": {
+        "parser": "html",
+        "printWidth": 120,
+        "htmlWhitespaceSensitivity": "ignore"
+      }
+    },
+    {
+      "files": ["*.xml", "*.object-meta.xml", "*.field-meta.xml", "*.flow-meta.xml", "*.permissionset-meta.xml"],
+      "options": {
+        "parser": "xml",
+        "printWidth": 160,
+        "tabWidth": 4,
+        "xmlWhitespaceSensitivity": "ignore",
+        "xmlSelfClosingSpace": true,
+        "xmlSortAttributesByKey": false
+      }
+    },
+    {
+      "files": ["*.json", "*.jsonc"],
+      "options": {
+        "parser": "json",
+        "printWidth": 100
+      }
+    },
+    {
+      "files": ["*.md"],
+      "options": {
+        "parser": "markdown",
+        "printWidth": 100,
+        "proseWrap": "preserve"
+      }
+    },
+    {
+      "files": ["*.yml", "*.yaml"],
+      "options": {
+        "parser": "yaml",
+        "printWidth": 100,
+        "singleQuote": false
+      }
+    }
+  ]
+}

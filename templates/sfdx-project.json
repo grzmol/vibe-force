@@ -1,0 +1,15 @@
+{
+  "packageDirectories": [
+    {
+      "path": "force-app",
+      "default": true
+    }
+  ],
+  "name": "REPLACE_WITH_PROJECT_NAME",
+  "namespace": "",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "67.0",
+  "pushPackageDirectoriesSequentially": false,
+  "sourceBehaviorOptions": [],
+  "plugins": {}
+}

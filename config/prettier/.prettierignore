@@ -1,0 +1,42 @@
+# vibe-force prettier ignore list. Passed to prettier with --ignore-path by `vf-check format`.
+# A project-level .prettierignore, when present, is passed as a second --ignore-path and both apply.
+
+# Dependencies and tool caches
+node_modules/
+.sfdx/
+.sf/
+.localdevserver/
+.vibeforce/
+coverage/
+dist/
+build/
+
+# Generated or vendored metadata that prettier must not rewrite
+**/staticresources/**
+**/lwc/jsconfig.json
+**/aura/**/*.auradoc
+**/*.min.js
+**/*.min.css
+**/*.resource-meta.xml
+**/documents/**
+**/email/**
+**/reports/**
+**/dashboards/**
+
+# Binary and data payloads
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.svg
+**/*.ico
+**/*.pdf
+**/*.zip
+**/*.jar
+**/*.csv
+**/*.log
+
+# Package/lock files are formatted by their own tooling
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

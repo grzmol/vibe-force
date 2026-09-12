@@ -1,0 +1,136 @@
+{
+  "$schema": "https://github.com/grzmol/vibe-force/blob/main/config/vibe-force.defaults.json",
+  "apiVersion": "67.0",
+  "packageDirectories": ["force-app"],
+  "orgs": {
+    "dev": "vf-dev",
+    "integration": "vf-int",
+    "uat": "vf-uat",
+    "prod": "vf-prod"
+  },
+  "defaultOrgKey": "dev",
+  "productionAliases": ["vf-prod", "prod", "production"],
+  "gates": {
+    "apexOrgCoverageMin": 85,
+    "apexClassCoverageMin": 75,
+    "jestCoverageMin": 80,
+    "analyzerFailSeverity": 3,
+    "requireTestForApexClass": true,
+    "requireJestForLwc": true
+  },
+  "testLevels": {
+    "sandbox": "RunLocalTests",
+    "production": "RunLocalTests"
+  },
+  "hooks": {
+    "mode": "standard",
+    "blockProductionDeploy": true,
+    "blockDestructive": true,
+    "autoFormat": true,
+    "enforceOwnership": true
+  },
+  "git": {
+    "baseRef": "origin/main",
+    "fallbackRef": "HEAD~1",
+    "includeWorkingTree": true
+  },
+  "format": {
+    "extensions": [
+      ".cls",
+      ".trigger",
+      ".apex",
+      ".js",
+      ".mjs",
+      ".cjs",
+      ".ts",
+      ".html",
+      ".css",
+      ".json",
+      ".md",
+      ".yml",
+      ".yaml",
+      ".xml"
+    ],
+    "maxFiles": 400
+  },
+  "lint": {
+    "extensions": [".js", ".mjs", ".cjs", ".ts"],
+    "includeGlobs": ["**/lwc/**", "**/aura/**"],
+    "maxWarnings": 0
+  },
+  "analyzer": {
+    "ruleSelectors": ["(Recommended,VibeForceApexRules,VibeForce)"],
+    "view": "table",
+    "workspace": [],
+    "timeoutSeconds": 900
+  },
+  "jest": {
+    "coverageReporters": ["json-summary"],
+    "timeoutSeconds": 900,
+    "passWithNoTests": true
+  },
+  "apex": {
+    "wait": 30,
+    "pollIntervalSeconds": 5,
+    "synchronousSingleClass": false,
+    "coverageScope": "changed",
+    "timeoutSeconds": 2400
+  },
+  "deploy": {
+    "validateStrategy": "auto",
+    "wait": 60,
+    "ignoreWarnings": false,
+    "quickJobMaxAgeDays": 10,
+    "timeoutSeconds": 5400
+  },
+  "smoke": {
+    "apexFile": "scripts/apex/smoke.apex",
+    "checkLimits": true,
+    "limitsWarnRemainingPercent": 15,
+    "logScan": true,
+    "logScanMax": 25,
+    "queries": [
+      {
+        "name": "deployed-apex-classes",
+        "soql": "SELECT COUNT() FROM ApexClass WHERE NamespacePrefix = null",
+        "toolingApi": true,
+        "expect": { "minRecords": 1 },
+        "severityOnFail": 2
+      },
+      {
+        "name": "apex-classes-with-compile-errors",
+        "soql": "SELECT Id, Name, Status FROM ApexClass WHERE Status != 'Active' AND NamespacePrefix = null",
+        "toolingApi": true,
+        "expect": { "maxRecords": 0 },
+        "severityOnFail": 1
+      },
+      {
+        "name": "inactive-lwc-free-triggers",
+        "soql": "SELECT Id, Name, Status FROM ApexTrigger WHERE Status != 'Active' AND NamespacePrefix = null",
+        "toolingApi": true,
+        "expect": { "maxRecords": 0 },
+        "severityOnFail": 1
+      },
+      {
+        "name": "failed-async-jobs-last-hour",
+        "soql": "SELECT Id, JobType, Status, ExtendedStatus FROM AsyncApexJob WHERE Status = 'Failed' AND CreatedDate = LAST_N_DAYS:1",
+        "toolingApi": false,
+        "expect": { "maxRecords": 0 },
+        "severityOnFail": 2
+      }
+    ]
+  },
+  "tooling": {
+    "sf": "sf",
+    "git": "git",
+    "npx": "npx",
+    "node": "node",
+    "prettier": "prettier",
+    "eslint": "eslint",
+    "jest": "sfdx-lwc-jest"
+  },
+  "reports": {
+    "keep": 50,
+    "redactKeys": ["accessToken", "sfdxAuthUrl", "refreshToken", "clientSecret", "password"]
+  }
+}

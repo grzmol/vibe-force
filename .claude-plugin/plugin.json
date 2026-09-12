@@ -1,0 +1,23 @@
+{
+  "name": "vibe-force",
+  "version": "0.1.0",
+  "description": "Salesforce delivery harness for Claude Code: parallel multi-agent workflow, documentation-grounded Salesforce and fflib skills, deterministic hooks, and local plus post-deploy verification gates.",
+  "author": {
+    "name": "grzmol",
+    "url": "https://github.com/grzmol"
+  },
+  "homepage": "https://github.com/grzmol/vibe-force",
+  "repository": "https://github.com/grzmol/vibe-force",
+  "license": "MIT",
+  "keywords": [
+    "salesforce",
+    "sfdx",
+    "apex",
+    "lwc",
+    "fflib",
+    "apex-enterprise-patterns",
+    "devops",
+    "deployment",
+    "testing"
+  ]
+}

@@ -1,0 +1,159 @@
+name: ci
+
+# Two gates, matching the vibe-force wave model:
+#   local-gate  no org needed:  vf-check local  (format + lint + analyzer + pairing + jest)
+#   org-gate    scratch org:    vf-check apex, then vf-check deploy-validate
+# The org gate only runs for pull requests so forks and tag builds never consume Dev Hub limits.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The plugin is checked out next to the project so vf-check.mjs can be invoked by path.
+  VF_ROOT: ${{ github.workspace }}/.vibe-force
+  CLAUDE_PROJECT_DIR: ${{ github.workspace }}
+
+jobs:
+  local-gate:
+    name: local gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # vf-check --changed needs history for git merge-base origin/main HEAD
+
+      - name: Checkout vibe-force plugin
+        uses: actions/checkout@v4
+        with:
+          repository: grzmol/vibe-force
+          path: .vibe-force
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Set up JDK (required by the Code Analyzer PMD engine)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install --global @salesforce/cli
+          sf version
+          sf plugins install code-analyzer
+
+      - name: Run the local gate
+        run: node "$VF_ROOT/scripts/checks/vf-check.mjs" local --json --report vf-local-report.json
+
+      - name: Upload the check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vf-local-report
+          path: vf-local-report.json
+          if-no-files-found: ignore
+
+  org-gate:
+    name: org gate
+    if: github.event_name == 'pull_request'
+    needs: local-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SCRATCH_ALIAS: vf-ci-${{ github.run_id }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout vibe-force plugin
+        uses: actions/checkout@v4
+        with:
+          repository: grzmol/vibe-force
+          path: .vibe-force
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install --global @salesforce/cli
+          sf version
+
+      - name: Write the JWT server key
+        run: |
+          umask 077
+          printf '%s' "${{ secrets.SF_JWT_KEY }}" > server.key
+
+      - name: Authenticate the Dev Hub
+        run: |
+          sf org login jwt \
+            --username "${{ secrets.SF_DEVHUB_USERNAME }}" \
+            --jwt-key-file server.key \
+            --client-id "${{ secrets.SF_CONSUMER_KEY }}" \
+            --instance-url "${{ vars.SF_INSTANCE_URL || 'https://login.salesforce.com' }}" \
+            --alias devhub \
+            --set-default-dev-hub
+
+      - name: Create a scratch org
+        run: |
+          sf org create scratch \
+            --target-dev-hub devhub \
+            --definition-file config/project-scratch-def.json \
+            --alias "$SCRATCH_ALIAS" \
+            --duration-days 1 \
+            --wait 30 \
+            --no-namespace
+
+      - name: Deploy the source
+        run: sf project deploy start --target-org "$SCRATCH_ALIAS" --wait 60
+
+      - name: Run Apex tests with coverage gates
+        run: node "$VF_ROOT/scripts/checks/vf-check.mjs" apex --target-org "$SCRATCH_ALIAS" --report vf-apex-report.json
+
+      - name: Validate the deployment payload
+        run: |
+          node "$VF_ROOT/scripts/checks/vf-check.mjs" deploy-validate \
+            --target-org "$SCRATCH_ALIAS" \
+            --report vf-deploy-validate-report.json
+
+      - name: Upload the check reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vf-org-reports
+          path: |
+            vf-apex-report.json
+            vf-deploy-validate-report.json
+          if-no-files-found: ignore
+
+      - name: Delete the scratch org
+        if: always()
+        run: sf org delete scratch --target-org "$SCRATCH_ALIAS" --no-prompt || true
+
+      - name: Remove the JWT server key
+        if: always()
+        run: rm -f server.key

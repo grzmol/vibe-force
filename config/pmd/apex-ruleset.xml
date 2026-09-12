@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  vibe-force curated PMD ruleset for Apex.
+
+  Loaded by config/code-analyzer.yml via engines.pmd.custom_rulesets. Code Analyzer tags every
+  rule in this file with `Custom` and with the ruleset name minus spaces (`VibeForceApexRules`),
+  so select it with the rule selector "(Recommended,VibeForceApexRules)" on code-analyzer run.
+
+  Priority -> Code Analyzer severity mapping (Code Analyzer PMD engine reference):
+    priority 1 (High)        -> severity 2 (High)
+    priority 2 (Medium_High) -> severity 3 (Moderate)
+    priority 3 (Medium)      -> severity 3 (Moderate)
+    priority 4 (Medium_Low)  -> severity 4 (Low)
+    priority 5 (Low)         -> severity 4 (Low)
+
+  The `analyzer` check fails at gates.analyzerFailSeverity (default 3), so priorities 1-3 below
+  are blocking and priorities 4-5 are advisory.
+-->
+<ruleset name="VibeForceApexRules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Curated Apex rules for the vibe-force delivery harness: security and CRUD/FLS enforcement,
+        governor-limit safety, error-prone constructs, test hygiene, and design thresholds.
+    </description>
+
+    <!-- ==========================================================================
+         Security - blocking. CRUD/FLS, injection, crypto, endpoints, credentials.
+         ========================================================================== -->
+
+    <rule ref="category/apex/security.xml/ApexCRUDViolation">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexSOQLInjection">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexSharingViolations">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexOpenRedirect">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexXSSFromURLParam">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexXSSFromEscapeFalse">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexInsecureEndpoint">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexBadCrypto">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexSuggestUsingNamedCred">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/security.xml/ApexDangerousMethods">
+        <priority>1</priority>
+    </rule>
+
+    <!-- ==========================================================================
+         Performance - blocking. Governor limits are the number one production
+         failure mode; see skill sf-governor-limits.
+         ========================================================================== -->
+
+    <rule ref="category/apex/performance.xml/OperationWithLimitsInLoop">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/performance.xml/OperationWithHighCostInLoop">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/performance.xml/AvoidNonRestrictiveQueries">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/performance.xml/EagerlyLoadedDescribeSObjectResult">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/performance.xml/AvoidDebugStatements">
+        <priority>3</priority>
+    </rule>
+
+    <!-- ==========================================================================
+         Error prone - blocking. Constructs that break at runtime or across orgs.
+         ========================================================================== -->
+
+    <rule ref="category/apex/errorprone.xml/AvoidHardcodingId">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/ApexCSRF">
+        <priority>1</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/AvoidDirectAccessTriggerMap">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/AvoidStatefulDatabaseResult">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/EmptyCatchBlock">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/InaccessibleAuraEnabledGetter">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/InvocableClassNoArgConstructor">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/TestMethodsMustBeInTestClasses">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/AvoidNonExistentAnnotations">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/AvoidInterfaceAsMapKey">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/OverrideBothEqualsAndHashcode">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/MethodWithSameNameAsEnclosingClass">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/TypeShadowsBuiltInNamespace">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/EmptyIfStmt">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/EmptyWhileStmt">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/EmptyTryOrFinallyBlock">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/errorprone.xml/EmptyStatementBlock">
+        <priority>4</priority>
+    </rule>
+
+    <!-- ==========================================================================
+         Best practices - test hygiene is blocking, style-ish rules are advisory.
+         See skill sf-apex-testing and check `vf-check apex`.
+         ========================================================================== -->
+
+    <rule ref="category/apex/bestpractices.xml/ApexUnitTestClassShouldHaveAsserts">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/ApexUnitTestShouldNotUseSeeAllDataTrue">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/ApexUnitTestMethodShouldHaveIsTestAnnotation">
+        <priority>2</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/QueueableWithoutFinalizer">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/AvoidLogicInTrigger">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/AvoidGlobalModifier">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/AvoidFutureAnnotation">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/DebugsShouldUseLoggingLevel">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/UnusedLocalVariable">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/ApexUnitTestClassShouldHaveRunAs">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/bestpractices.xml/ApexAssertionsShouldIncludeMessage">
+        <priority>5</priority>
+    </rule>
+
+    <!-- ==========================================================================
+         Design - advisory thresholds. Only the properties documented on
+         pmd_rules_apex_design.html are overridden here.
+         ========================================================================== -->
+
+    <rule ref="category/apex/design.xml/CyclomaticComplexity">
+        <priority>4</priority>
+        <properties>
+            <property name="methodReportLevel" value="10"/>
+            <property name="classReportLevel" value="40"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/apex/design.xml/CognitiveComplexity">
+        <priority>4</priority>
+        <properties>
+            <property name="methodReportLevel" value="15"/>
+            <property name="classReportLevel" value="50"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/apex/design.xml/AvoidDeeplyNestedIfStmts">
+        <priority>4</priority>
+        <properties>
+            <property name="problemDepth" value="3"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/apex/design.xml/ExcessiveParameterList">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/design.xml/ExcessivePublicCount">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/design.xml/TooManyFields">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/design.xml/NcssCount">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/design.xml/UnusedMethod">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/design.xml/AvoidBooleanMethodParameters">
+        <priority>5</priority>
+    </rule>
+
+    <!-- ==========================================================================
+         Code style - advisory. Formatting is owned by prettier-plugin-apex and
+         enforced by `vf-check format`, so only semantic style rules stay here.
+         ========================================================================== -->
+
+    <rule ref="category/apex/codestyle.xml/ClassNamingConventions">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/MethodNamingConventions">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/FieldNamingConventions">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/PropertyNamingConventions">
+        <priority>5</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/FormalParameterNamingConventions">
+        <priority>5</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/LocalVariableNamingConventions">
+        <priority>5</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/AnnotationsNamingConventions">
+        <priority>5</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/FieldDeclarationsShouldBeAtStart">
+        <priority>5</priority>
+    </rule>
+
+    <rule ref="category/apex/codestyle.xml/OneDeclarationPerLine">
+        <priority>5</priority>
+    </rule>
+
+</ruleset>

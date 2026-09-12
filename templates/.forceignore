@@ -1,0 +1,44 @@
+# .forceignore excludes files from deploy and retrieve operations.
+# Source: https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_exclude_source.htm
+
+# Tooling and runner artefacts
+**/node_modules
+**/.sfdx
+**/.sf
+**/.vibeforce
+**/.localdevserver
+**/coverage
+**/jest.config.js
+**/jest.config.mjs
+**/eslint.config.mjs
+**/eslint.config.js
+**/.eslintrc*
+**/.prettierrc*
+**/.prettierignore
+**/package.json
+**/package-lock.json
+**/README.md
+**/*.test.js
+**/__tests__/**
+**/jest-mocks/**
+
+# LWC editor scaffolding that must never be deployed
+**/lwc/jsconfig.json
+**/lwc/.eslintrc.json
+**/aura/.eslintrc.json
+
+# Metadata that is environment specific or managed outside source control.
+# Uncomment the entries your org actually needs.
+# **/profiles/**
+# **/settings/**
+# **/connectedApps/**
+# **/namedCredentials/**
+# **/certs/**
+# **/siteDotComSites/**
+# **/networks/**
+# **/sharingRules/**
+# **/duplicateRules/**
+
+# Package directories in a multi-package project sometimes share a translation file; keep the
+# generated ones out of source tracking.
+**/*.translation-meta.xml

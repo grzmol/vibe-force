@@ -1,0 +1,20 @@
+{
+  "name": "vibe-force",
+  "owner": {
+    "name": "grzmol",
+    "url": "https://github.com/grzmol"
+  },
+  "metadata": {
+    "description": "Salesforce development plugins for Claude Code.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "vibe-force",
+      "source": "./",
+      "description": "Salesforce delivery harness: parallel agent waves, deep Salesforce and fflib skills, deterministic lifecycle hooks, local and post-deploy check gates.",
+      "category": "development",
+      "keywords": ["salesforce", "apex", "lwc", "fflib", "devops"]
+    }
+  ]
+}
