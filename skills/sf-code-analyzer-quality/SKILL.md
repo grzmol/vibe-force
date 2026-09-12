@@ -14,6 +14,7 @@ description: Salesforce Code Analyzer v5 and the rest of the local quality gate 
 - Wiring Prettier/ESLint so `vf-check format` and `vf-check lint` are deterministic.
 - Introducing the gate to a legacy codebase without stopping delivery (baseline and ratchet).
 - Wave 2 of the vibe-force workflow: `sf-quality-gate` runs `vf-check local` and reports.
+- Org-wide debt rather than a diff: skill `sf-technical-debt-audit` (it turns recurring findings into regex rules authored here).
 
 ## Toolchain and prerequisites
 

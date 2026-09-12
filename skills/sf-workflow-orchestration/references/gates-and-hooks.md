@@ -72,6 +72,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/checks/vf-check.mjs" <check> [flags]
 | `format` | no | prettier `--check` (`--fix` writes) |
 | `lint` | no | eslint over LWC/Aura JS |
 | `analyzer` | no | `sf code-analyzer run` with `config/code-analyzer.yml` |
+| `pairing` | no | every Apex class and trigger has a test, every LWC bundle a Jest spec (`gates.previewBundlePattern` exempts preview scaffolding) |
 | `jest` | no | `sfdx-lwc-jest` with coverage gate |
 | `static` | no | format + lint + analyzer + test/component pairing |
 | `local` | no | static + jest - the wave-2 gate and the Stop gate |

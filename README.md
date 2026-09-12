@@ -83,7 +83,7 @@ it touches a shared org.
 | | |
 | --- | --- |
 | **11 agents** | An orchestrator, a scout, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
-| **27 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification - plus five on fflib / Apex Enterprise Patterns |
+| **29 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification, org security audit and technical debt audit - plus five on fflib / Apex Enterprise Patterns |
 | **12 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
 | **7 hooks** | Session context, Bash guard, edit guard, post-edit checks, claim release, stop gate, compaction notes |
 
@@ -93,6 +93,24 @@ prose. Nothing invents a limit, a flag or a rule id.
 ## The checks
 
 The same runner is used by agents, hooks, you, and CI:
+
+| Check | Needs an org | What it runs |
+| --- | --- | --- |
+| `format` | no | `prettier --check` on Apex, LWC, XML, JS |
+| `lint` | no | `eslint` on LWC and Aura JavaScript |
+| `analyzer` | no | `sf code-analyzer run`, fails at `gates.analyzerFailSeverity` |
+| `pairing` | no | every Apex class has a test, every LWC bundle a Jest spec |
+| `jest` | no | `sfdx-lwc-jest` plus the `gates.jestCoverageMin` gate |
+| `static` | no | format + lint + analyzer + pairing |
+| `local` | no | static + jest - the full offline gate |
+| `apex` | yes | `sf apex run test` plus the coverage gates |
+| `deploy-validate` | yes | check-only deploy; records the quick-deploy job id |
+| `deploy-quick` | yes | deploys a previously validated job id |
+| `smoke` | yes | post-deploy probes: anonymous Apex, SOQL, limits, logs |
+| `verify` | yes | apex + smoke |
+| `all` | yes | local + apex + smoke |
+
+`vf-check --help` prints the same list from the runner itself.
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/checks/vf-check.mjs" local --changed

@@ -11,6 +11,7 @@ description: Salesforce security model and secure-coding enforcement for Apex, L
 - Building or reviewing permission metadata (`permissionsets/`, `permissionsetgroups/`, object/field permissions).
 - Dynamic SOQL/SOSL, `Database.query`, string-concatenated queries, `lwc:dom="manual"`, `innerHTML`, redirects, HTTP callouts with credentials.
 - Wave 2 of the vibe-force workflow: `sf-security-reviewer` reads this skill before reviewing a diff; `vf-check analyzer` enforces the machine-verifiable subset.
+- Auditing the standing posture of a whole org rather than one change: skill `sf-org-security-audit`, which reuses the permission queries in `references/permission-architecture.md`.
 
 ## API version 67.0 default-mode change (read this first)
 

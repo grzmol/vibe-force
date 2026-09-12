@@ -1,5 +1,5 @@
 ---
-description: Run a vibe-force check (format, lint, analyzer, jest, static, local, apex, smoke, verify, all), interpret the JSON report, group findings by severity, and propose the minimal fix set.
+description: Run one vibe-force gate and interpret its JSON report. Offline checks (no org): `format` prettier, `lint` eslint, `analyzer` Code Analyzer, `pairing` every Apex class has a test and every LWC a Jest spec, `jest` sfdx-lwc-jest plus coverage, and the composites `static` (format+lint+analyzer+pairing) and `local` (static+jest, the default). Org checks: `apex` Apex tests and coverage, `deploy-validate` check-only deploy, `deploy-quick` deploy a validated job id, `smoke` post-deploy probes, and the composites `verify` (apex+smoke) and `all` (local+apex+smoke). Groups findings by severity and proposes the minimal fix set.
 argument-hint: "[check] [--changed|--files <globs>] [--target-org <alias>]"
 allowed-tools: Read, Grep, Glob, Edit, Bash(node:*), Bash(git status:*), Bash(git diff:*), Bash(git merge-base:*)
 ---
@@ -18,8 +18,9 @@ When no check name is given, use `local`.
 | `format` | no | `prettier --check` on changed Apex, LWC, XML, JS |
 | `lint` | no | `eslint` on LWC and Aura JavaScript |
 | `analyzer` | no | `sf code-analyzer run` with `config/code-analyzer.yml`, fails at `analyzerFailSeverity` |
+| `pairing` | no | every Apex class and trigger has a test, every LWC bundle has a Jest spec (`*Harness` and `*Fixtures` bundles exempt) |
 | `jest` | no | `sfdx-lwc-jest` plus the `jestCoverageMin` gate |
-| `static` | no | format + lint + analyzer |
+| `static` | no | format + lint + analyzer + pairing |
 | `local` | no | static + jest - the full local gate, and the default |
 | `apex` | yes | `sf apex run test` plus the coverage gates |
 | `deploy-validate` | yes | check-only deploy, records the job id |
