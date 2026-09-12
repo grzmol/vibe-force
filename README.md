@@ -2,7 +2,7 @@
 
 <img src="assets/logo.png" alt="VibeForce. Salesforce delivery harness for Claude Code." width="620">
 
-<h1>VibeForce. Salesforce delivery harness for Claude Code</h1>
+<h1>Salesforce delivery harness for Claude Code</h1>
 
 <p><b>Salesforce delivery, on rails.</b></p>
 
