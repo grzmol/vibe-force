@@ -1,11 +1,15 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="vibe-force" width="620">
+<img src="assets/logo.png" alt="vibe-force - Salesforce delivery harness for Claude Code" width="620">
 
-<h3>Salesforce delivery, on rails.</h3>
+<h1>vibe-force &mdash; Salesforce delivery harness for Claude Code</h1>
 
-<p>A Claude Code plugin that turns Claude into a Salesforce delivery team:<br>
-parallel agents, documentation-grounded skills, and gates that refuse to let broken work through.</p>
+<p><b>Salesforce delivery, on rails.</b></p>
+
+<p>vibe-force is a Claude Code plugin for Salesforce development. It turns Claude into a Salesforce
+delivery team: parallel Apex, LWC, metadata and integration agents, documentation-grounded skills
+for Apex, LWC, Flow and fflib, deterministic hooks, and local plus post-deploy check gates that
+refuse to let broken work through.</p>
 
 <p>
 <img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-5A4FCF">
@@ -79,7 +83,7 @@ it touches a shared org.
 | | |
 | --- | --- |
 | **11 agents** | An orchestrator, a scout, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
-| **23 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification - plus five on fflib / Apex Enterprise Patterns |
+| **27 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification - plus five on fflib / Apex Enterprise Patterns |
 | **12 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
 | **7 hooks** | Session context, Bash guard, edit guard, post-edit checks, claim release, stop gate, compaction notes |
 
