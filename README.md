@@ -10,7 +10,7 @@ parallel agents, documentation-grounded skills, and gates that refuse to let bro
 <p>
 <img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-5A4FCF">
 <img alt="Salesforce CLI v2" src="https://img.shields.io/badge/Salesforce%20CLI-v2-00A1E0">
-<img alt="Node >= 20" src="https://img.shields.io/badge/Node-%E2%89%A5%2020-3C873A">
+<img alt="Node 20+" src="https://img.shields.io/badge/Node-20%2B-3C873A">
 <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-0-brightgreen">
 <img alt="MIT" src="https://img.shields.io/badge/license-MIT-black">
 </p>
