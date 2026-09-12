@@ -95,15 +95,18 @@ before it can be previewed, and only desktop previews are supported.
 | Importing a new CSS-only component | Automatic | Automatic |
 | JavaScript change inside a method, new/changed event handler | Automatic | Automatic |
 | Adding or deleting a file in an existing bundle | Automatic (Spring '25 and later) | Automatic |
-| New `@api` property or method | Deploy + restart server | Deploy + browser refresh |
-| Wire adapter added/changed, GraphQL query changed | Deploy + restart server | Deploy + browser refresh |
-| New `@salesforce` scoped module import | Deploy + restart server | Deploy + browser refresh |
+| New `@api` property or method | Deploy + restart server | Browser refresh |
+| Wire adapter added/changed, GraphQL query changed | Deploy + restart server | Browser refresh |
+| New `@salesforce` scoped module import | Deploy + restart server | Browser refresh |
 | `.js-meta.xml` edit | Deploy + restart server | Deploy + browser refresh |
-| Service component library revision | Deploy + restart server | Deploy + browser refresh |
+| Service component library revision | Deploy + restart server | Browser refresh |
 | Apex, objects, flows, permission sets, layouts | Deploy (+ republish the site for `dev site`) | Deploy |
 
-Only `.js`, `.html`, and `.css` files participate in automatic reload. For an Experience site you
-must also republish the site after deploying, then restart the server.
+Only `.js`, `.html`, and `.css` files participate in automatic reload. Everything else needs a
+manual step, and that step differs by preview mode: an app or site preview needs a deploy and a
+server restart, a single-component preview needs only a browser refresh - except a `.js-meta.xml`
+edit, which the documentation calls out as needing a deploy in every mode. For an Experience site
+you must also republish the site after deploying, then restart the server.
 
 ## 6. Direction of change
 

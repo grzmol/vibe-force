@@ -8,6 +8,7 @@
  *   analyzerFailSeverity    Code Analyzer severity that fails the build (1 Critical .. 5 Info)
  *   requireTestForApexClass every non-test Apex class needs a test class
  *   requireJestForLwc       every LWC module needs a __tests__ spec
+ *   previewBundlePattern    LWC bundle names exempt from requireJestForLwc (preview scaffolding)
  */
 
 import { STATUS, gate, severityNumber } from './result.mjs';
@@ -20,6 +21,7 @@ export function gateConfig(config) {
     analyzerFailSeverity: 3,
     requireTestForApexClass: true,
     requireJestForLwc: true,
+    previewBundlePattern: '(?:Harness|Fixtures)$',
     ...(config?.gates ?? {}),
   };
 }

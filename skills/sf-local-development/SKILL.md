@@ -12,6 +12,7 @@ description: Covers the Salesforce development loop that runs before any deploym
 | Iterating on an LWC before deploying | Yes |
 | Deciding whether a change can be proven without an org | Yes |
 | `sf lightning dev ...` fails, or a change does not appear in the preview | Yes |
+| Previewing empty, error or long-text states the org has no records for | Yes - pattern 9 |
 | Source tracking reports conflicts between project and org | Yes |
 | Writing the component | Skill `sf-lwc-development` |
 | Writing or fixing Jest tests | Skill `sf-lwc-jest-testing` |
@@ -102,18 +103,20 @@ Omit `--name` to get an interactive picker. Flag tables for all three commands:
 | Importing a new CSS-only component | Yes |
 | JavaScript change that does not alter the public API | Yes |
 | Adding or deleting a file inside an existing bundle | Yes (Spring '25 and later) |
-| New `@api` property or method | No - deploy, then restart the server |
+| New `@api` property or method | No - browser refresh for a component preview, deploy + server restart for app/site |
 | Wire adapter changes (new adapter, config change, GraphQL query change) | No |
 | New `@salesforce` scoped import | No |
-| `.js-meta.xml` change | No - only `.js`, `.html`, `.css` hot-reload |
+| `.js-meta.xml` change | No - only `.js`, `.html`, `.css` hot-reload, and a meta edit needs a deploy in every mode |
 | Service component library change | No |
 | Apex, objects, flows, permissions | No - always a deploy |
 
 Recovery for a non-reloading change:
 
 ```bash
+# component preview: refresh the browser, no deploy
+# app or site preview, or any .js-meta.xml edit:
 sf project deploy start --source-dir force-app/main/default/lwc/accountCard --target-org vf-dev
-# then restart the sf lightning dev process (app/site); for component preview, refresh the browser
+# then restart the sf lightning dev process
 ```
 
 Other limits: Live Preview previews Lightning web components only (no Aura), and Landing Pages
@@ -133,7 +136,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/checks/vf-check.mjs" local --changed
 | `format` | `prettier --check` on changed Apex/LWC/XML/JS | Any file is unformatted (`--fix` rewrites) |
 | `lint` | `eslint` on LWC/Aura JS | Any error-severity rule fires |
 | `analyzer` | `sf code-analyzer run` with `config/code-analyzer.yml` | A violation at or above `gates.analyzerFailSeverity` (3) |
-| `jest` | `sfdx-lwc-jest` | A test fails, coverage < `gates.jestCoverageMin` (80), or an LWC bundle has no `__tests__` |
+| `jest` | `sfdx-lwc-jest` | A test fails, coverage < `gates.jestCoverageMin` (80), or an LWC bundle has no `__tests__` (`*Harness` and `*Fixtures` bundles are exempt - pattern 9) |
 
 No org, no network. Exit 0 pass, 1 gate failure, 2 missing tooling, 3 org/network (not reachable
 for this gate). Run it before every handoff to wave 3.
@@ -195,16 +198,83 @@ Apex is a probe, not a test: it neither counts toward coverage nor proves the co
 
 ### 9. Component data without org records
 
-When the org lacks the records a component needs, choose one of:
+`sf lightning dev component` renders a bundle with whatever its own defaults produce - there is no
+property editor and no state switcher. Seeding org records covers the happy path; the loading,
+empty, error and long-text states still need data you control. Never add an `isDemo` branch to the
+component to make a preview work.
+
+The pattern: one fixture module, two consumers.
+
+| Piece | Path | Package directory | Purpose |
+| --- | --- | --- | --- |
+| Component | `lwc/accountCard/` | default (`force-app`) | Ships |
+| Fixtures | `lwc/accountCardFixtures/` | default (`force-app`) | Every state, one definition |
+| Harness | `lwc/accountCardHarness/` | preview only (`preview-app`) | Mounts the component per state |
+| Spec | `lwc/accountCard/__tests__/` | default (`force-app`) | Imports the same fixtures |
+
+Fixtures sit beside the component so `sfdx-lwc-jest` resolves `c/accountCardFixtures` the same way
+it resolves any sibling bundle. The harness sits in its own package directory so it never reaches
+production.
+
+```js
+// force-app/main/default/lwc/accountCardFixtures/accountCardFixtures.js
+export const EMPTY = { key: 'empty', label: 'Empty', records: [], error: null };
+export const ERROR = { key: 'error', label: 'Error', records: [], error: { body: { message: 'No access.' }, status: 403 } };
+export const STATES = [EMPTY, ERROR];
+```
+
+```js
+// the spec asserts the same states the harness shows
+import { ERROR } from 'c/accountCardFixtures';
+element.error = ERROR.error;
+```
+
+```json
+// sfdx-project.json - the harness directory is never default
+{
+  "packageDirectories": [
+    { "path": "force-app", "default": true },
+    { "path": "preview-app", "default": false }
+  ]
+}
+```
+
+```bash
+# the harness is served from local source; the org is only there for platform modules
+sf lightning dev component --name accountCardHarness --target-org vf-dev
+
+# deploy it only when a .js-meta.xml edit has to register, and only to a dev org
+sf project deploy start --source-dir preview-app --target-org vf-dev
+```
+
+Never include `preview-app` in a production deploy: deploy by `--source-dir` or by manifest, not
+by `sf project deploy start` with no arguments, which takes every package directory. The harness
+does not need to be in any org to be previewed - the component list is built from the local project
+- so in practice the preview directory stays undeployed everywhere.
+
+Naming is load-bearing. `vf-check pairing` exempts bundle names matching
+`gates.previewBundlePattern` (default `(?:Harness|Fixtures)$`) from `gates.requireJestForLwc`, and
+the reference Jest config drops the same bundles from `collectCoverageFrom` - a wrapper with no
+behaviour of its own would otherwise fail the spec gate and dilute coverage. Every exemption is
+named in the check log, so narrow the pattern when a shipped component's name collides. Skeletons
+to copy: `${CLAUDE_PLUGIN_ROOT}/templates/lwc/exampleCardFixtures/` and
+`${CLAUDE_PLUGIN_ROOT}/templates/lwc/exampleCardHarness/`.
+
+The harness stays `isExposed=false` and declares no `targets`. The Project Components sidebar
+"lists components in your project that are available for preview": the CLI builds that list by
+globbing every directory under every `**/lwc` in the package directories and reads the
+`.js-meta.xml` only for `masterLabel` and `description`, so an unexposed bundle is still
+previewable. The one documented prerequisite is that the project has an `lwc` directory at all.
+
+Seeding the org remains the right answer when the component reads records through Lightning Data
+Service without any injectable input:
 
 | Option | When | How |
 | --- | --- | --- |
-| Seed the org | Preferred for scratch orgs | `sf data import tree --plan ./data/data-plan.json --target-org vf-dev` |
+| Seed the org | Wire adapters against real records | `sf data import tree --plan ./data/data-plan.json --target-org vf-dev` |
 | Seed one record | Quick probe | `sf data create record --sobject Account --values "Name='Acme'" --target-org vf-dev` |
-| Jest fixtures | Logic and rendering branches | `__tests__/data/*.json` emitted through test wire adapters |
+| Fixture module | Public properties, rendering branches, error paths | `c/<component>Fixtures`, shared with the spec |
 | A `@api` demo payload on the component | Never in shipped code | Delete before handing off |
-
-Never add an `isDemo` branch to production component code to make a preview work.
 
 ### 10. Editor and container setup
 
@@ -234,6 +304,8 @@ sf org open --url-only --target-org vf-dev
 | `sf project deploy start` in a file watcher | Deploy storms and tracking conflicts | Deploy at explicit checkpoints |
 | Committing `.vibeforce/reports/**` or preview artefacts | Noise in review | Keep them gitignored in the consumer project |
 | Assuming Aura components appear in the preview | They never do | Test Aura in the org |
+| Harness bundle in the default package directory | Preview scaffolding ships to production | Own package directory, deployed by `--source-dir` to dev orgs only |
+| Fixture data written twice, once in the spec and once in the harness | The preview shows states no test covers | One `c/<component>Fixtures` module, imported by both |
 
 ## Verification
 
@@ -249,6 +321,9 @@ sf project deploy preview --target-org vf-dev
 
 # visually confirm the component against org data
 sf lightning dev component --name accountCard --target-org vf-dev
+
+# confirm the preview harness is exempt from the spec gate rather than missing one
+node "${CLAUDE_PLUGIN_ROOT}/scripts/checks/vf-check.mjs" pairing --files "preview-app/**" --json
 ```
 
 Only after `vf-check local` is green does the work move to wave 3 (`deploy-validate` then
@@ -261,4 +336,5 @@ Only after `vf-check local` is green does the work move to wave 3 (`deploy-valid
 - [`references/local-loop-playbook.md`](references/local-loop-playbook.md) - first-run setup and the daily loop, command by command.
 - [`references/local-vs-org.md`](references/local-vs-org.md) - capability matrix across offline, scratch org, sandbox, and production.
 - [`references/troubleshooting-local.md`](references/troubleshooting-local.md) - symptom-to-cause table for the preview server and source tracking.
+- Source for the Project Components list (official Salesforce CLI plugin): [`plugin-lightning-dev/src/shared/componentUtils.ts`](https://github.com/salesforcecli/plugin-lightning-dev/blob/main/src/shared/componentUtils.ts) - `getNamespacePaths` globs `**/lwc` per package directory, `getComponentMetadata` reads only `masterLabel` and `description`.
 - Official: [Run a Live Component Preview](https://developer.salesforce.com/docs/platform/lwc/guide/get-started-test-components.html), [lightning dev app](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_lightning_dev_app.html), [lightning dev component](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_lightning_dev_component.html), [lightning dev site](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_lightning_dev_site.html), [project deploy start](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_project_deploy_start.html), [project deploy preview](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_project_deploy_preview.html), [project retrieve start](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_project_retrieve_start.html), [apex run](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_apex_run.html), [org open](https://developer.salesforce.com/docs/platform/salesforce-cli-reference/guide/cli_reference_org_open.html).

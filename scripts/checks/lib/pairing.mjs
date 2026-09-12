@@ -14,7 +14,29 @@ import path from 'node:path';
 import { packageDirectories } from './config.mjs';
 import { classify, resolveTargets, walk } from './files.mjs';
 import { booleanGate, gateConfig } from './gates.mjs';
-import { fail, finding, makeResult, skip } from './result.mjs';
+import { EXIT, VfError, fail, finding, makeResult, skip } from './result.mjs';
+
+/**
+ * Preview-only bundles. `<name>Harness` mounts a component against fixed data for
+ * `sf lightning dev component`; `<name>Fixtures` is the state module the harness and the Jest
+ * spec both import. Neither carries shipped behaviour, so neither needs a spec of its own -
+ * see skill `sf-local-development`, pattern 9.
+ *
+ * The default suffixes are a naming convention, not a fact about the bundle, so a project whose
+ * shipped components collide with them narrows `gates.previewBundlePattern`. Every exemption is
+ * named in the log: a silently skipped bundle is a gate that fails open.
+ */
+function previewMatcher(pattern) {
+  try {
+    return new RegExp(pattern);
+  } catch (error) {
+    throw new VfError(
+      `gates.previewBundlePattern is not a valid regular expression: ${pattern}`,
+      EXIT.CONFIG,
+      `Fix it in .vibeforce/config.json (${error.message}), or remove it to fall back to the default.`,
+    );
+  }
+}
 
 const TEST_NAME_PATTERNS = [
   (name) => `${name}Test`,
@@ -98,11 +120,18 @@ export async function run(ctx) {
   }
 
   let lwcMissing = 0;
+  let lwcPreview = 0;
   if (gates.requireJestForLwc) {
+    const isPreviewBundle = previewMatcher(gates.previewBundlePattern);
     for (const moduleDir of scope.lwcModules) {
       const abs = path.join(ctx.projectRoot, moduleDir);
       if (!fs.existsSync(abs)) continue;
       const name = path.basename(moduleDir);
+      if (isPreviewBundle.test(name)) {
+        lwcPreview += 1;
+        ctx.log.warn(`pairing: ${name} exempt from the Jest spec gate (gates.previewBundlePattern)`);
+        continue;
+      }
       const hasJs = fs.existsSync(path.join(abs, `${name}.js`));
       const hasMeta = fs.existsSync(path.join(abs, `${name}.js-meta.xml`));
       if (!hasJs || !hasMeta) continue;
@@ -133,14 +162,15 @@ export async function run(ctx) {
   result.raw = {
     mode: targets.mode,
     apexClassesChecked: scope.apexClasses.length + scope.apexTriggers.length,
-    lwcModulesChecked: scope.lwcModules.length,
+    lwcModulesChecked: scope.lwcModules.length - lwcPreview,
+    lwcPreviewBundlesSkipped: lwcPreview,
     apexMissing,
     lwcMissing,
   };
-  result.detail = `${scope.apexClasses.length + scope.apexTriggers.length} Apex sources, ${scope.lwcModules.length} LWC modules; ${apexMissing + lwcMissing} unpaired`;
+  result.detail = `${scope.apexClasses.length + scope.apexTriggers.length} Apex sources, ${scope.lwcModules.length - lwcPreview} LWC modules${lwcPreview > 0 ? ` (+${lwcPreview} preview-only)` : ''}; ${apexMissing + lwcMissing} unpaired`;
 
   if (apexMissing + lwcMissing > 0) return fail(result, result.detail);
-  if (scope.apexClasses.length + scope.apexTriggers.length + scope.lwcModules.length === 0) {
+  if (scope.apexClasses.length + scope.apexTriggers.length + scope.lwcModules.length - lwcPreview === 0) {
     return skip(result, `no Apex or LWC sources in scope (${targets.mode})`);
   }
   return result;

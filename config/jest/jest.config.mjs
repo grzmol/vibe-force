@@ -39,6 +39,9 @@ export default {
     '**/lwc/**/*.js',
     '!**/lwc/**/__tests__/**',
     '!**/lwc/**/*.spec.js',
+    // Preview-only bundles: no shipped behaviour, and `vf-check pairing` exempts them too.
+    '!**/lwc/*Harness/**',
+    '!**/lwc/*Fixtures/**',
     '!**/node_modules/**',
   ],
   coverageReporters: ['text-summary', 'json-summary', 'lcov'],

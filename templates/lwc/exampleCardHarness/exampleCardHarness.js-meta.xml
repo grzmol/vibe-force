@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>false</isExposed>
+    <description>Preview-only harness for c-example-card. Never add targets: this bundle is not for App Builder.</description>
+</LightningComponentBundle>

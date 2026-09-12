@@ -23,6 +23,7 @@ Objects merge deeply; arrays are replaced wholesale.
 | `gates.analyzerFailSeverity` | number | `3` | Code Analyzer severity at which `vf-check analyzer` fails (1 highest) |
 | `gates.requireTestForApexClass` | boolean | `true` | Static check and advisory note for an Apex class with no test class |
 | `gates.requireJestForLwc` | boolean | `true` | Same for an LWC module with no `__tests__` file |
+| `gates.previewBundlePattern` | string | `(?:Harness\|Fixtures)$` | Bundle names exempt from `requireJestForLwc`: preview scaffolding (skill `sf-local-development`, pattern 9). Every exemption is named in the check log. Narrow it when a shipped component's name collides |
 | `testLevels.sandbox` | string | `"RunLocalTests"` | Test level for sandbox deploys |
 | `testLevels.production` | string | `"RunLocalTests"` | Test level for production validation |
 | `hooks.mode` | enum | `"standard"` | `off`, `minimal`, `standard`, `strict` |

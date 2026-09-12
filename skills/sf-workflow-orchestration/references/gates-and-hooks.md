@@ -100,7 +100,8 @@ to hold a turn hostage.
     "jestCoverageMin": 80,
     "analyzerFailSeverity": 3,
     "requireTestForApexClass": true,
-    "requireJestForLwc": true
+    "requireJestForLwc": true,
+    "previewBundlePattern": "(?:Harness|Fixtures)$"
   }
 }
 ```

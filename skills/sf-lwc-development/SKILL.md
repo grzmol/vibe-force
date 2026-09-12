@@ -16,6 +16,7 @@ description: Covers building Lightning Web Components on the Salesforce platform
 | Writing Jest tests for the component | Skill `sf-lwc-jest-testing` |
 | Previewing the component without deploying | Skill `sf-local-development` |
 | ESLint/PMD/Code Analyzer findings on LWC JS | Skill `sf-code-analyzer-quality` |
+| Generating a component, spec or migration with Salesforce DX MCP tools or Agentforce Vibes LWC skills | Yes - [`references/mcp-and-skills.md`](references/mcp-and-skills.md), then the same gates apply |
 
 LWC is the owner slice of `sf-lwc-engineer` in wave 1: `lwc/` and `aura/` only. Apex signatures the
 component consumes are fixed in wave 0 and recorded in `.vibeforce/state/contract.md`.
@@ -394,5 +395,6 @@ Gates that apply to LWC work: `requireJestForLwc` (every bundle needs `__tests__
 - [`references/component-reference.md`](references/component-reference.md) - decorators, lifecycle hooks, every template directive, `js-meta.xml` targets, `@salesforce/*` module table.
 - [`references/data-access-patterns.md`](references/data-access-patterns.md) - wire vs imperative vs LDS matrix, GraphQL wire adapter, `reduceErrors`, record-form components.
 - [`references/events-and-messaging.md`](references/events-and-messaging.md) - CustomEvent propagation matrix, LMS setup, parent/child patterns, Aura/Visualforce interop.
+- [`references/mcp-and-skills.md`](references/mcp-and-skills.md) - `lwc-experts`, `aura-experts` and `experts-validation` toolsets, per-tool GA status, the LWC skills that superseded them, and the checklist for accepting generated code.
 - [`references/lwc-recipes-catalog.md`](references/lwc-recipes-catalog.md) - curated runnable patterns mapped to `trailheadapps/lwc-recipes`.
 - Official: [Lightning Web Components Developer Guide](https://developer.salesforce.com/docs/platform/lwc/guide/introduction.html), [Lifecycle Hooks](https://developer.salesforce.com/docs/platform/lwc/guide/create-lifecycle-hooks.html), [renderedCallback()](https://developer.salesforce.com/docs/platform/lwc/guide/create-lifecycle-hooks-rendered.html), [XML Configuration File Elements](https://developer.salesforce.com/docs/platform/lwc/guide/reference-configuration-tags.html), [notifyRecordUpdateAvailable](https://developer.salesforce.com/docs/platform/lwc/guide/reference-notify-record-update.html), [Lightning Message Service](https://developer.salesforce.com/docs/platform/lightning-component-reference/guide/lightning-message-service.html), [Lightning Web Security](https://developer.salesforce.com/docs/platform/lightning-components-security/guide/lws-intro.html).

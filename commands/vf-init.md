@@ -56,6 +56,8 @@ report the mismatch and offer to align it. Do not silently edit it.
 | `package.json` | `package.json` | Only when absent; otherwise step 6 |
 | `jest.config.js` | `jest.config.js` | Only when absent |
 | `README.md` | `README.md` | Only on explicit request |
+| `lwc/exampleCardFixtures/` | `<default package dir>/main/default/lwc/` | Only on explicit request; rename per component |
+| `lwc/exampleCardHarness/` | `<preview package dir>/main/default/lwc/` | Only on explicit request; preview-only directory, never the default one (skill `sf-local-development`, pattern 9) |
 
 Diff procedure for an existing target: read both files, show a unified diff of the differences only, and ask
 whether to keep the project version, take the template version, or merge specific hunks. Default to keeping the

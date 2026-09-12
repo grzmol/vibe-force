@@ -1,0 +1,18 @@
+<template>
+    <div class="slds-p-around_small slds-border_bottom">
+        <template for:each={buttons} for:item="state">
+            <lightning-button
+                key={state.key}
+                data-key={state.key}
+                label={state.label}
+                variant={state.variant}
+                class="slds-m-right_x-small"
+                onclick={handleSelect}
+            ></lightning-button>
+        </template>
+    </div>
+
+    <div class="slds-p-around_small">
+        <c-example-card records={selected.records} error={selected.error}></c-example-card>
+    </div>
+</template>

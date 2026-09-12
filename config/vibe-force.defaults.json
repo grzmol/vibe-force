@@ -16,7 +16,8 @@
     "jestCoverageMin": 80,
     "analyzerFailSeverity": 3,
     "requireTestForApexClass": true,
-    "requireJestForLwc": true
+    "requireJestForLwc": true,
+    "previewBundlePattern": "(?:Harness|Fixtures)$"
   },
   "testLevels": {
     "sandbox": "RunLocalTests",
