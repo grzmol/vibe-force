@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="vibe-force - Salesforce delivery harness for Claude Code" width="620">
+<img src="assets/logo.png" alt="VibeForce. Salesforce delivery harness for Claude Code." width="620">
 
 <h1>vibe-force &mdash; Salesforce delivery harness for Claude Code</h1>
 
 <p><b>Salesforce delivery, on rails.</b></p>
 
-<p>vibe-force is a Claude Code plugin for Salesforce development. It turns Claude into a Salesforce
+<p>VibeForce is a Claude Code plugin for Salesforce development. It turns Claude into a Salesforce
 delivery team: parallel Apex, LWC, metadata and integration agents, documentation-grounded skills
 for Apex, LWC, Flow and fflib, deterministic hooks, and local plus post-deploy check gates that
 refuse to let broken work through.</p>
