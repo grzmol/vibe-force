@@ -6,10 +6,10 @@
 
 <p><b>Salesforce delivery, on rails.</b></p>
 
-<p>VibeForce is a Claude Code plugin for Salesforce development. It turns Claude into a Salesforce
-delivery team: parallel Apex, LWC, metadata and integration agents, documentation-grounded skills
-for Apex, LWC, Flow and fflib, deterministic hooks, and local plus post-deploy check gates that
-refuse to let broken work through.</p>
+<p>VibeForce turns Claude into a Salesforce delivery team: parallel Apex, LWC, metadata and
+integration agents, documentation-grounded skills, deterministic hooks, and check gates that refuse
+to let broken work through - while reading metadata by selector instead of by the file, so the
+context window goes to the work rather than to XML.</p>
 
 <p>
 <img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-5A4FCF">
@@ -23,19 +23,83 @@ refuse to let broken work through.</p>
 
 ---
 
-## Why
+## What you get
 
 Asking an assistant for "a trigger and a test" gets you code. It does not get you a feature that
-survives a deploy. vibe-force adds the parts that usually go missing:
+survives a deploy, and it spends your context window on XML nobody reads.
 
-- **Work happens in parallel.** Apex, LWC, metadata and integration agents build at the same time
+- **A feature, not a snippet.** Apex, LWC, metadata and integration agents build at the same time
   over disjoint paths. A hook denies any write outside an agent's slice, so they cannot collide.
-- **Every step is gated.** Not reminders - exit codes. Format, lint, Code Analyzer, Jest, Apex
-  coverage, deploy validation. The session cannot end while the local gate is red.
-- **Production is protected mechanically.** Direct deploys to a production alias are blocked.
-  Destructive operations on production are blocked. Secrets on the command line are blocked.
+- **Broken work cannot ship.** Format, lint, Code Analyzer, Jest, Apex coverage and deploy
+  validation are exit codes, not reminders. The session cannot end while the local gate is red.
+- **Production is protected mechanically.** Direct deploys to a production alias, destructive
+  operations on production and secrets on the command line are blocked - over Bash and over MCP.
 - **A green deploy is not the finish line.** After the deploy, agents probe the real org: smoke
   Apex, verification queries, limits, fresh error logs.
+- **~19x less context spent reading metadata.** Measured on Salesforce's own sample apps: the
+  26 336 tokens one story reads as whole files cost 1 403 through `vf-xml`.
+  [How it works and what it saves](#the-metadata-token-bill).
+
+## The metadata token bill
+
+Salesforce metadata, not Apex, is what drains a session: one profile can outweigh every Apex class
+it grants access to. Where a story that grants a field, checks a profile, inspects two flows and
+reads one layout spends its reading budget:
+
+```mermaid
+pie showData title Metadata tokens one story reads today
+    "Permission set" : 12386
+    "Flows (2)" : 6624
+    "Profile" : 6078
+    "Layout" : 1248
+```
+
+Permission sets and profiles dominate, and neither is ever read for more than a few lines of it.
+`vf-xml` indexes a metadata file by byte range, so a session reads structure and single nodes
+instead of files.
+
+```bash
+git ls-files -z '*.xml' | xargs -0 node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" stats | tail   # rank the sinks
+node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" outline <profile>                      # ~40 tokens
+node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" get <profile> '//fieldPermissions[field=Account.Rating]'
+node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" set <profile> '<selector>' --value true
+```
+
+Measured, not estimated, on metadata published by Salesforce in its own sample apps. "Read whole" is
+the file; "outline + one node" is the structural summary plus the single element an edit actually
+needs. Token counts are bytes over 3.5, the same estimate `vf-xml stats` prints.
+
+| Metadata read | Read whole | outline | + one node | After | Saved | |
+| --- | --- | --- | --- | --- | --- | --- |
+| Permission set, 208 field permissions (`PMT_Global_Admin`) | 12 386 | 219 | 41 | 260 | **48x** | ████████████ |
+| Profile (`GanttChart` `Admin`) | 6 078 | 170 | 44 | 214 | **28x** | ███████ |
+| Record-triggered flow, 3 assignments + 4 decisions (`PMT_Task_Before_Automation`) | 3 312 | 243 | 146 | 389 | **9x** | ██ |
+| Page layout (`PMT_Program__c`) | 1 248 | 151 | - | 151 | **8x** | ██ |
+| Workflow file, 2 rules + 4 field updates, read as a migration plan | 791 | 297 | - | 297 | **3x** | █ |
+
+```
+read whole   ████████████████████████████████████████████████  26 336 tok
+via vf-xml   ██                                                  1 403 tok
+```
+
+Roughly **19x**, or 25 000 tokens of context returned to the actual work, per story. The ratio grows
+with file size, because an outline's cost tracks how many *kinds* of child a file has, not how many
+nodes: 208 field permissions summarise as one line. An enterprise profile is routinely several times
+larger than these samples, and the saving scales with it while the outline barely moves. Whether
+that shows up as cost or as sessions that stop needing compaction depends on where the pressure is.
+
+Patches splice the addressed byte range only, so the file stays byte-identical everywhere else: the
+diff stays reviewable, `vf-check format` stays green, and flow canvas coordinates and Metadata API
+element order survive. The `xml-bulk-read` guard enforces the habit from both sides - a `Read` and a
+shell `cat` of a metadata file over `xml.readMaxBytes` are denied, with the replacement command in
+the denial. Bounded reads (`head -50`, `Read` with a `limit`) always pass.
+
+Workflow rules get the same treatment. `/vf-migrate-workflow plan` classifies every rule in a
+workflow file without quoting any XML; `convert` emits the before-save flow for the rules that
+convert mechanically - one Assignment on `$Record`, never an Update Records element - and reports the
+after-save work rather than guessing at it. Method and mapping tables:
+[`xml-token-economy.md`](skills/sf-project-structure/references/xml-token-economy.md) and
+[`workflow-to-flow-migration.md`](skills/sf-flow-automation/references/workflow-to-flow-migration.md).
 
 ## Install
 
@@ -86,32 +150,19 @@ it touches a shared org.
 | --- | --- |
 | **12 agents** | An orchestrator, a scout, a technical architect, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
 | **31 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification, org security audit, technical debt audit, Agentforce and Data Cloud - plus five on fflib / Apex Enterprise Patterns |
-| **12 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
+| **13 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `pairing`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
 | **8 hooks** | Session context, Bash guard, edit guard, MCP guard, post-edit checks, claim release, stop gate, compaction notes |
 | **2 metadata tools** | `vf-xml` reads and patches metadata XML by byte range; `vf-workflow-to-flow` converts workflow rules it can convert and reports the rest |
 
 Every skill is grounded in official Salesforce documentation and ships reference tables, not just
 prose. Nothing invents a limit, a flag or a rule id.
 
-## Salesforce-authored plugins
-
-The same marketplace lists eleven plugins published by Salesforce in
-[`forcedotcom/sf-skills`](https://github.com/forcedotcom/sf-skills), covering the domains
-vibe-force deliberately leaves alone: DevOps Center, integration metadata generation, Shield and
-Archive, platform tracing, Lightning Types, React UI bundles, Experience CMS, Mobile SDK, service
-messaging channels, B2B Commerce, ISV analytics.
-
-```
-/plugin install integration@vibe-force
-/plugin install dx-devops@vibe-force
-```
-
-They are links, not copies: Claude Code fetches them from Salesforce, and no upstream text lives in
-this repository. Upstream declares Apache-2.0 for the repository and CC-BY-NC-4.0 for the npm
-package that publishes the same skills, so vibe-force points at it and writes its own skills from
-official Salesforce documentation - proven by `scripts/dev/skill-originality.mjs`. The plugins that
-would collide with the vibe-force core are deliberately not listed. Full rationale, routing table
-and pinning instructions: [docs/salesforce-skills.md](docs/salesforce-skills.md).
+The same marketplace links eleven plugins published by Salesforce in
+[`forcedotcom/sf-skills`](https://github.com/forcedotcom/sf-skills) - DevOps Center, integration
+metadata, Shield, tracing, Lightning Types, Mobile SDK, B2B Commerce and more - covering the domains
+vibe-force deliberately leaves alone. They are links, not copies: Claude Code fetches them from
+Salesforce, and no upstream text lives here. Routing table and pinning:
+[docs/salesforce-skills.md](docs/salesforce-skills.md).
 
 ## The checks
 
@@ -165,100 +216,15 @@ Four modes - `off`, `minimal`, `standard` (default), `strict`. Per-shell overrid
 ## MCP
 
 The plugin ships the official Salesforce DX MCP server (`@salesforce/mcp`), scoped to your default
-org and to read-and-analyse toolsets: `core,data,code-analysis,testing`. Deploy tools are off by
-default, so deploys stay on the gated CLI path.
+org and to read-and-analyse toolsets. Deploy tools are off by default, so deploys stay on the gated
+CLI path, and the MCP guard denies over MCP what the Bash guard denies in a shell.
 
 ```bash
 export VF_MCP_TOOLSETS="core,data,metadata,testing"   # opt into deploy and retrieve
 export VF_MCP_ORGS="acme-dev,acme-uat"                # pin to explicit aliases
 ```
 
-MCP tools reach an org without going through Bash, so they get their own guard: a production
-`deploy_metadata` or `delete_org` is denied, a deploy with no passing local gate is flagged, and
-`retrieve_metadata` is flagged for writing files behind the ownership guard. Rules, tool table and
-verification: [docs/mcp.md](docs/mcp.md).
-
-## Metadata XML and the token bill
-
-Salesforce metadata, not Apex, is what drains a session's context: one profile can outweigh every
-Apex class it grants access to. Measured on Salesforce's own sample apps, this is where a story that
-grants a field, checks a profile, inspects two flows and reads one layout spends its reading budget:
-
-```mermaid
-pie showData title Metadata tokens one story reads today
-    "Permission set" : 12386
-    "Flows (2)" : 6624
-    "Profile" : 6078
-    "Layout" : 1248
-```
-
-Permission sets and profiles dominate, and neither is ever read for more than a few lines of it.
-`vf-xml` indexes a metadata file by byte range, so a session reads structure and single nodes
-instead of files.
-
-```mermaid
-flowchart TD
-    A["Need something from a metadata file"] --> B{"Know which node?"}
-    B -- no --> C["vf-xml outline<br/>structure only, ~200 tokens"]
-    C --> D["vf-xml get '&lt;selector&gt;'<br/>one element, tens of tokens"]
-    B -- yes --> D
-    D --> E{"Changing it?"}
-    E -- no --> F["Done"]
-    E -- yes --> G["vf-xml set / replace / insert / remove<br/>splices that byte range only"]
-    G --> H["well-formedness re-checked<br/>before anything is written"]
-    H --> I["vf-check format --files<br/>then deploy --dry-run"]
-    J["Read or cat the whole file"] -.->|"xml-bulk-read denies it<br/>and hands back the command"| C
-```
-
-```bash
-git ls-files -z '*.xml' | xargs -0 node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" stats | tail   # rank the sinks
-node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" outline <profile>                      # ~40 tokens
-node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" get <profile> '//fieldPermissions[field=Account.Rating]'
-node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" set <profile> '<selector>' --value true
-```
-
-Patches splice the addressed byte range only, so the file stays byte-identical everywhere else: the
-diff stays reviewable, `vf-check format` stays green, and flow canvas coordinates and Metadata API
-element order survive. The `xml-bulk-read` guard enforces the habit from both sides - a `Read` and a
-shell `cat` of a metadata file over `xml.readMaxBytes` are denied, with the replacement command in
-the denial. Bounded reads (`head -50`, `Read` with a `limit`) always pass.
-
-### What it saves
-
-Measured, not estimated, on metadata published by Salesforce in its own sample apps. "Read whole" is
-the file; "outline + one node" is the structural summary plus the single element an edit actually
-needs. Token counts are bytes over 3.5, the same estimate `vf-xml stats` prints.
-
-| Metadata read | Read whole | outline | + one node | After | Saved | |
-| --- | --- | --- | --- | --- | --- | --- |
-| Permission set, 208 field permissions (`PMT_Global_Admin`) | 12 386 | 219 | 41 | 260 | **48x** | ████████████ |
-| Profile (`GanttChart` `Admin`) | 6 078 | 170 | 44 | 214 | **28x** | ███████ |
-| Record-triggered flow, 3 assignments + 4 decisions (`PMT_Task_Before_Automation`) | 3 312 | 243 | 146 | 389 | **9x** | ██ |
-| Page layout (`PMT_Program__c`) | 1 248 | 151 | - | 151 | **8x** | ██ |
-| Workflow file, 2 rules + 4 field updates, read as a migration plan | 791 | 297 | - | 297 | **3x** | █ |
-
-The ratio grows with file size, because an outline's cost tracks how many *kinds* of child a file
-has, not how many nodes: 208 field permissions summarise as one line. The samples above are small -
-an enterprise profile or permission set is routinely several times larger, and the saving scales with
-it while the outline barely moves.
-
-The same story, summed:
-
-```
-read whole   ████████████████████████████████████████████████  26 336 tok
-via vf-xml   ██                                                  1 403 tok
-```
-
-Roughly **19x**, or 25 000 tokens of context returned to the actual work, per story. Whether that
-shows up as cost or as sessions that stop needing compaction depends on where the pressure is.
-
-Workflow rules get the same treatment. `/vf-migrate-workflow plan` classifies every rule in a
-workflow file without quoting any XML; `convert` emits the before-save flow for the rules that
-convert mechanically - one Assignment on `$Record`, never an Update Records element - and reports the
-after-save work rather than guessing at it. Method and mapping tables:
-[`skills/sf-project-structure/references/xml-token-economy.md`](skills/sf-project-structure/references/xml-token-economy.md)
-and
-[`skills/sf-flow-automation/references/workflow-to-flow-migration.md`](skills/sf-flow-automation/references/workflow-to-flow-migration.md).
+Rules, tool table and verification: [docs/mcp.md](docs/mcp.md).
 
 ## Configure
 

@@ -5,6 +5,22 @@ and stays small; metadata is written by the platform and does not. A single prof
 larger than every Apex class it grants access to. This reference is the method for touching that
 metadata without paying to load it, and the ordering is deliberate: the cheapest lever first.
 
+## The loop
+
+```mermaid
+flowchart TD
+    A["Need something from a metadata file"] --> B{"Know which node?"}
+    B -- no --> C["vf-xml outline<br/>structure only, ~200 tokens"]
+    C --> D["vf-xml get '&lt;selector&gt;'<br/>one element, tens of tokens"]
+    B -- yes --> D
+    D --> E{"Changing it?"}
+    E -- no --> F["Done"]
+    E -- yes --> G["vf-xml set / replace / insert / remove<br/>splices that byte range only"]
+    G --> H["well-formedness re-checked<br/>before anything is written"]
+    H --> I["vf-check format --files<br/>then deploy --dry-run"]
+    J["Read or cat the whole file"] -.->|"xml-bulk-read denies it<br/>and hands back the command"| C
+```
+
 ## 0. Measure before optimising
 
 Rank the sinks, then decide. One command answers it:
