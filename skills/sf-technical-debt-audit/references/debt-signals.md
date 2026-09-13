@@ -44,7 +44,7 @@ being added, not removed.
 | More than one trigger per object | `grep -rho "trigger [A-Za-z0-9_]* on [A-Za-z0-9_]*" force-app --include="*.trigger" \| awk '{print $4}' \| sort \| uniq -c \| sort -rn` | 2 or more | One trigger per object, dispatching to handlers | `sf-apex-development` |
 | Logic in the trigger body | `wc -l force-app/main/default/triggers/*.trigger` | More than ~20 lines | Move to a handler class | `sf-apex-development` |
 | Active Workflow Rules | `SELECT MasterLabel, ProcessType, Status FROM FlowDefinitionView WHERE Status = 'Active'` (Tooling API) | Any, for automation that also has a Flow | Migrate, then deactivate | `sf-flow-automation` |
-| Active Process Builders | Same query; `ProcessType` distinguishes them | Any | Migrate to record-triggered Flow | `sf-flow-automation` |
+| Active Process Builders | Same query; `ProcessType` `Workflow` is a record change process, `InvocableProcess` and `CustomEvent` the other two | Any | Migrate to record-triggered Flow, then deactivate | `sf-process-builder-migration` |
 | Flow and Apex writing the same field | Read the Flow metadata and grep the field API name in Apex | Any overlap | Choose one owner per field | `sf-flow-automation` |
 | Recursive automation | Debug log shows the same trigger context twice | Any | Static guard in the handler, or a Flow entry condition | `sf-debugging-logs` |
 | Order-dependent automation with no documentation | No `.vibeforce/state/contract.md` entry naming the order | Any object with trigger + Flow + validation rules | Document the order of execution for that object | `sf-workflow-orchestration` |

@@ -25,13 +25,10 @@
  */
 
 const xn = require('./xml-nodes');
+const bsf = require('./before-save-flow');
 
 /** WorkflowRule.triggerType -> FlowStart.recordTriggerType (+ the change gate). */
-const TRIGGER_MAP = {
-  onCreateOnly: { recordTriggerType: 'Create', requireChange: false },
-  onAllChanges: { recordTriggerType: 'CreateAndUpdate', requireChange: false },
-  onCreateOrTriggeringUpdate: { recordTriggerType: 'CreateAndUpdate', requireChange: true }
-};
+const TRIGGER_MAP = bsf.LEGACY_TRIGGER_MAP;
 
 /** FilterItem operation -> FlowRecordFilterOperator. Unmapped values are blockers. */
 const OPERATOR_MAP = {
@@ -48,14 +45,7 @@ const OPERATOR_MAP = {
 /** FilterOperation values with no single-condition Flow equivalent. */
 const UNMAPPED_OPERATORS = ['notContain', 'includes', 'excludes', 'within'];
 
-const INDENT = '    ';
-
-function apiName(text) {
-  return String(text || '')
-    .replace(/[^\w]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .replace(/_{2,}/g, '_');
-}
+const apiName = bsf.apiName;
 
 /** Salesforce object a workflow file belongs to, from `<Object>.workflow-meta.xml`. */
 function objectFromFileName(file) {
@@ -63,16 +53,8 @@ function objectFromFileName(file) {
   return base.replace(/\.workflow(-meta\.xml)?$/i, '');
 }
 
-function childValue(doc, nodeIndex, name) {
-  for (const k of doc.childrenOf.get(nodeIndex) || []) {
-    if (doc.nodes[k].name === name) return xn.leafValue(doc, k);
-  }
-  return '';
-}
-
-function childNodes(doc, nodeIndex, name) {
-  return (doc.childrenOf.get(nodeIndex) || []).filter((k) => doc.nodes[k].name === name);
-}
+const childValue = xn.childValue;
+const childNodes = xn.children;
 
 /**
  * A literal has no declared type in workflow metadata, so the type is inferred.
@@ -230,12 +212,11 @@ function formatPlan(result) {
   return lines.join('\n');
 }
 
-function el(name, value, depth) {
-  return `${INDENT.repeat(depth)}<${name}>${xn.escapeText(value)}</${name}>`;
-}
-
 /**
  * Emit the before-save flow for one rule.
+ *
+ * The Flow shape itself lives in before-save-flow.js; this function only turns
+ * workflow metadata into the value descriptors that builder takes.
  *
  * @param {object} args
  * @param {object} args.rule a rule from plan()
@@ -247,87 +228,20 @@ function el(name, value, depth) {
  */
 function beforeSaveFlow(args) {
   const { rule, object, apiVersion } = args;
-  const status = args.status || 'Draft';
-  const flowName = args.flowName || `${apiName(object)}_${apiName(rule.name)}_Before`;
-  const label = `${object} ${rule.name} (before save)`;
-  const assignmentName = 'Set_Fields';
-
-  const items = rule.before
-    .map((b) => {
-      const v = literalValueElement(b.literal);
-      return [
-        `${INDENT.repeat(2)}<assignmentItems>`,
-        el('assignToReference', `$Record.${b.field}`, 3),
-        el('operator', 'Assign', 3),
-        `${INDENT.repeat(3)}<value>`,
-        el(v.tag, v.value, 4),
-        `${INDENT.repeat(3)}</value>`,
-        `${INDENT.repeat(2)}</assignmentItems>`
-      ].join('\n');
-    })
-    .join('\n');
-
-  // One Assignment element carries every field: fewer elements, one pass, and it
-  // is the whole reason a before-save flow is cheaper than the rule it replaces.
-  const assignments = [
-    `${INDENT}<assignments>`,
-    el('name', assignmentName, 2),
-    el('label', 'Set Fields', 2),
-    el('locationX', '176', 2),
-    el('locationY', '287', 2),
-    items,
-    `${INDENT}</assignments>`
-  ].join('\n');
-
-  const filters = rule.criteria
-    .map((c) => {
-      const v = literalValueElement(c.value);
-      return [
-        `${INDENT.repeat(2)}<filters>`,
-        el('field', c.flowField, 3),
-        el('operator', c.flowOperator, 3),
-        `${INDENT.repeat(3)}<value>`,
-        el(v.tag, v.value, 4),
-        `${INDENT.repeat(3)}</value>`,
-        `${INDENT.repeat(2)}</filters>`
-      ].join('\n');
-    })
-    .join('\n');
-
-  const start = [
-    `${INDENT}<start>`,
-    el('locationX', '50', 2),
-    el('locationY', '0', 2),
-    `${INDENT.repeat(2)}<connector>`,
-    el('targetReference', assignmentName, 3),
-    `${INDENT.repeat(2)}</connector>`,
-    ...(rule.requireChange ? [el('doesRequireRecordChangedToMeetCriteria', 'true', 2)] : []),
-    ...(rule.criteria.length ? [el('filterLogic', rule.booleanFilter || 'and', 2), filters] : []),
-    el('object', object, 2),
-    el('recordTriggerType', rule.recordTriggerType, 2),
-    el('triggerType', 'RecordBeforeSave', 2),
-    `${INDENT}</start>`
-  ].join('\n');
-
-  // Element order follows the Flow XSD sequence; the Metadata API enforces it.
-  const body = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<Flow xmlns="http://soap.sforce.com/2006/04/metadata">',
-    el('apiVersion', apiVersion, 1),
-    assignments,
-    el('description', rule.description || `Before-save conversion of workflow rule ${rule.name}.`, 1),
-    el('environments', 'Default', 1),
-    el('interviewLabel', `${label} {!$Flow.CurrentDateTime}`, 1),
-    el('label', label, 1),
-    el('migratedFromWorkflowRuleName', rule.name, 1),
-    el('processType', 'AutoLaunchedFlow', 1),
-    start,
-    el('status', status, 1),
-    '</Flow>',
-    ''
-  ].join('\n');
-
-  return { name: flowName, xml: body };
+  return bsf.buildBeforeSaveFlow({
+    flowName: args.flowName || `${apiName(object)}_${apiName(rule.name)}_Before`,
+    label: `${object} ${rule.name} (before save)`,
+    description: rule.description || `Before-save conversion of workflow rule ${rule.name}.`,
+    apiVersion,
+    status: args.status || 'Draft',
+    object,
+    recordTriggerType: rule.recordTriggerType,
+    requireChange: rule.requireChange,
+    filterLogic: rule.booleanFilter || 'and',
+    filters: rule.criteria.map((c) => ({ field: c.flowField, operator: c.flowOperator, value: literalValueElement(c.value) })),
+    assignments: rule.before.map((b) => ({ field: b.field, value: literalValueElement(b.literal) })),
+    migratedFromWorkflowRuleName: rule.name
+  });
 }
 
 /**

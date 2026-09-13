@@ -30,7 +30,7 @@ with a measurable signal:
 | --- | --- | --- | --- |
 | Version drift | `<apiVersion>` spread across metadata; `sourceApiVersion` in `sfdx-project.json` | Behaviour differs per class; upgrades become archaeology | `sf-project-structure` |
 | Test debt | Classes without a test, coverage below the gate, `SeeAllData=true`, assertion-free tests | No safety net, so every change is manual QA | `sf-apex-testing`, `sf-lwc-jest-testing` |
-| Automation sprawl | Triggers per object, Workflow Rules and Process Builder still active beside Flows | Order of execution becomes unknowable | `sf-flow-automation`, `sf-apex-development` |
+| Automation sprawl | Triggers per object, Workflow Rules and Process Builder still active beside Flows | Order of execution becomes unknowable | `sf-flow-automation`, `sf-process-builder-migration`, `sf-apex-development` |
 | Structural debt | Hardcoded ids and URLs, profiles instead of permission sets, no layering, duplicated selectors | Every environment needs manual fixes | `sf-minimal-change`, `sf-fflib-foundations` |
 | Dead weight | Fields, objects, classes and permission sets nothing references; Apex volume against the org limit | Search noise, deploy time, limit headroom | `sf-minimal-change` |
 | Delivery debt | Untracked manual org changes, no package boundaries, no CI gate | Releases are irreproducible | `sf-deployment-strategies`, `sf-packaging-release` |
@@ -106,9 +106,9 @@ sf data query --use-tooling-api --target-org vf-int \
 ```
 
 Two triggers on one object is a finding on its own: the platform does not define their order.
-Workflow Rules and Process Builder are retired for new automation - an active one beside a
+Workflow Rules and Process Builder lost support on 31 December 2025 - an active one beside a
 record-triggered Flow on the same object is the single most common source of "it depends" bugs
-(skill `sf-flow-automation`).
+(skills `sf-flow-automation` for workflow rules, `sf-process-builder-migration` for processes).
 
 ### 5. Hardcoded ids, endpoints and environment assumptions
 

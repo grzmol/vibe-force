@@ -94,12 +94,14 @@ element order survive. The `xml-bulk-read` guard enforces the habit from both si
 shell `cat` of a metadata file over `xml.readMaxBytes` are denied, with the replacement command in
 the denial. Bounded reads (`head -50`, `Read` with a `limit`) always pass.
 
-Workflow rules get the same treatment. `/vf-migrate-workflow plan` classifies every rule in a
-workflow file without quoting any XML; `convert` emits the before-save flow for the rules that
-convert mechanically - one Assignment on `$Record`, never an Update Records element - and reports the
-after-save work rather than guessing at it. Method and mapping tables:
-[`xml-token-economy.md`](skills/sf-project-structure/references/xml-token-economy.md) and
-[`workflow-to-flow-migration.md`](skills/sf-flow-automation/references/workflow-to-flow-migration.md).
+Workflow rules and Process Builder get the same treatment. `/vf-migrate-workflow plan` classifies
+every rule in a workflow file and `/vf-migrate-process plan` every criteria node in a process,
+without quoting any XML; `convert` emits the before-save flow for what converts mechanically - one
+Assignment on `$Record`, never an Update Records element - and reports the after-save work, the
+scheduled paths and the chaining semantics rather than guessing at them. Method and mapping tables:
+[`xml-token-economy.md`](skills/sf-project-structure/references/xml-token-economy.md),
+[`workflow-to-flow-migration.md`](skills/sf-flow-automation/references/workflow-to-flow-migration.md)
+and [`sf-process-builder-migration`](skills/sf-process-builder-migration/SKILL.md).
 
 ## Install
 
@@ -143,16 +145,17 @@ it touches a shared org.
 | `/vf-org [sub]` | Org context: list, use, limits, open, login, health |
 | `/vf-xml [sub]` | Reads and patches metadata XML by selector instead of loading whole files |
 | `/vf-migrate-workflow` | Classifies workflow rules and converts the mechanical ones to before-save flows |
+| `/vf-migrate-process` | Classifies Process Builder criteria nodes and converts the mechanical ones to before-save flows |
 
 ## What ships inside
 
 | | |
 | --- | --- |
 | **12 agents** | An orchestrator, a scout, a technical architect, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
-| **31 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification, org security audit, technical debt audit, Agentforce and Data Cloud - plus five on fflib / Apex Enterprise Patterns |
+| **32 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, Process Builder migration, security model, deployment, packaging, data, debugging, verification, org security audit, technical debt audit, Agentforce and Data Cloud - plus five on fflib / Apex Enterprise Patterns |
 | **13 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `pairing`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
 | **8 hooks** | Session context, Bash guard, edit guard, MCP guard, post-edit checks, claim release, stop gate, compaction notes |
-| **2 metadata tools** | `vf-xml` reads and patches metadata XML by byte range; `vf-workflow-to-flow` converts workflow rules it can convert and reports the rest |
+| **3 metadata tools** | `vf-xml` reads and patches metadata XML by byte range; `vf-workflow-to-flow` and `vf-process-to-flow` convert the workflow rules and processes they can convert and report the rest |
 
 Every skill is grounded in official Salesforce documentation and ships reference tables, not just
 prose. Nothing invents a limit, a flag or a rule id.

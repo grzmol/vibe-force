@@ -4,7 +4,8 @@ Workflow rules are retired for new automation and Salesforce ships **Migrate to 
 move the existing ones. This reference covers the part a session actually has to reason about: which
 rules convert mechanically, how each workflow element maps onto Flow metadata, and where a converter
 must refuse to guess. The deterministic half is implemented by
-`scripts/vf-workflow-to-flow.js`; see the `/vf-migrate-workflow` command.
+`scripts/vf-workflow-to-flow.js`; see the `/vf-migrate-workflow` command. Process Builder is the
+other retired automation and migrates by different rules: skill `sf-process-builder-migration`.
 
 ## The split: two flows, not one
 
