@@ -35,7 +35,7 @@ Two consequences for contributors:
 ## What is listed, and why those
 
 Upstream ships 228 skills. Loading all of them costs roughly 45k tokens of skill descriptions
-before a session does any work; vibe-force's 31 skills cost about 7.3k. Bundling everything would
+before a session does any work; vibe-force's 32 skills cost about 7.5k. Bundling everything would
 make the plugin unusable, so the marketplace lists only the eleven domain plugins that cover ground
 vibe-force deliberately does not, and whose skill triggers do not collide with ours.
 

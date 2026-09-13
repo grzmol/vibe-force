@@ -289,6 +289,17 @@ function insert(text, selector, xml, where = 'after') {
   return { text: spliceAll(doc.src, edits), changed: hits.length };
 }
 
+/** Child elements of a node with the given tag name, in document order. */
+function children(doc, nodeIndex, name) {
+  return (doc.childrenOf.get(nodeIndex) || []).filter((k) => doc.nodes[k].name === name);
+}
+
+/** Decoded text of a node's first child with the given tag name, or ''. */
+function childValue(doc, nodeIndex, name) {
+  const hit = children(doc, nodeIndex, name)[0];
+  return hit === undefined ? '' : leafValue(doc, hit);
+}
+
 /** Rough token cost of a string. Bytes per token is ~3.5 for metadata XML. */
 function estimateTokens(bytes) {
   return Math.round(bytes / 3.5);
@@ -354,6 +365,8 @@ module.exports = {
   innerText,
   leafValue,
   identityOf,
+  children,
+  childValue,
   get,
   replaceNodes,
   setText,

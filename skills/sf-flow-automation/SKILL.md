@@ -323,6 +323,9 @@ Debug logs record flow execution under `FLOW_*` markers; log setup is in skill
 - [references/invocable-apex.md](references/invocable-apex.md) - `@InvocableMethod` and `@InvocableVariable` rules, recipes, testing
 - [references/workflow-to-flow-migration.md](references/workflow-to-flow-migration.md) - workflow rule to flow mapping tables, the before/after split, `/vf-migrate-workflow`
 
+Process Builder is a separate migration with separate rules: skill `sf-process-builder-migration`
+(criteria-node chaining, scheduled actions, `/vf-migrate-process`).
+
 Sibling skills: `sf-apex-development` (triggers, handler shape, order of execution),
 `sf-minimal-change` (declarative versus code, standard features first), `sf-governor-limits`
 (the limits flows share with Apex), `sf-code-analyzer-quality` (the Flow rule set),

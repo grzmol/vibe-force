@@ -8,6 +8,7 @@ skills:
   - sf-project-structure
   - sf-security-model
   - sf-flow-automation
+  - sf-process-builder-migration
 effort: medium
 maxTurns: 70
 ---
