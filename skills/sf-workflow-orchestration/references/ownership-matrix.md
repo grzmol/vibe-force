@@ -17,16 +17,21 @@ Parallel waves are safe only while no two agents can write the same file. This i
 | `**/permissionsets/**`, `**/permissionsetgroups/**` | metadata | `sf-metadata-engineer` | permission-set-first policy |
 | `**/profiles/**` | metadata | `sf-metadata-engineer` | hook prompts before every write |
 | `**/flows/**` | metadata | `sf-metadata-engineer` | active version handling on deploy |
-| `**/layouts/**`, `**/flexipages/**`, `**/tabs/**`, `**/applications/**` | metadata | `sf-metadata-engineer` | UI assembly |
-| `**/labels/**`, `**/settings/**`, `**/globalValueSets/**` | metadata | `sf-metadata-engineer` | shared, high-collision: keep edits small |
+| `**/layouts/**`, `**/flexipages/**`, `**/tabs/**`, `**/applications/**`, `**/quickActions/**` | metadata | `sf-metadata-engineer` | UI assembly |
+| `**/labels/**`, `**/settings/**`, `**/globalValueSets/**`, `**/recordTypes/**` | metadata | `sf-metadata-engineer` | shared, high-collision: keep edits small |
+| `**/bots/**`, `**/botVersions/**`, `**/aiAuthoringBundles/**`, `**/aiEvaluationDefinitions/**`, `**/genAiPlanners/**`, `**/genAiPlannerBundles/**`, `**/genAiPlugins/**`, `**/genAiFunctions/**`, `**/genAiPromptTemplates/**` | metadata | `sf-metadata-engineer` | Agentforce agent definitions; the Apex behind an action stays in the apex slice. Skill `sf-agentforce-development` |
+| `**/dataStreamDefinitions/**`, `**/mktCalcInsightObjectDefs/**` | metadata | `sf-metadata-engineer` | Data Cloud streams and calculated insights. Skill `sf-data-cloud` |
 | `**/namedCredentials/**`, `**/externalCredentials/**` | integration | `sf-integration-engineer` | secrets never in source |
-| `**/externalServices/**`, `**/platformEventChannels/**`, `**/platformEventChannelMembers/**`, `**/remoteSiteSettings/**`, `**/connectedApps/**`, `**/authproviders/**` | integration | `sf-integration-engineer` | |
+| `**/externalServiceRegistrations/**`, `**/externalClientApps/**`, `**/connectedApps/**`, `**/dataSources/**` | integration | `sf-integration-engineer` | `externalClientApps/` is the successor to `connectedApps/`; directory names follow the metadata registry, not the type names |
+| `**/platformEventChannels/**`, `**/platformEventChannelMembers/**`, `**/remoteSiteSettings/**`, `**/authproviders/**` | integration | `sf-integration-engineer` | |
 | `*Test.cls`, `**/__tests__/**` | tests | wave-1 owner in wave 1, `sf-test-engineer` in wave 2 | ownership hands over at the wave boundary |
 | `.vibeforce/state/**`, `.sfdx/**`, `.sf/**`, `.localdevserver/**`, `node_modules/**` | none | nobody | hook denies all writes |
 | `sfdx-project.json`, `.forceignore`, `package.json`, CI workflows | project | orchestrator only | changing them mid-wave invalidates every sibling's checks |
 
 The same table lives in code at `scripts/lib/sf-paths.js` (`SLICES`). Change one, change both;
-`tests/hooks.test.mjs` asserts the mapping for the common paths.
+`tests/hooks.test.mjs` asserts the mapping for the common paths, and
+`node scripts/dev/verify-metadata-dirs.mjs` checks every directory against Salesforce's own
+metadata registry and against this table.
 
 ## Claim lifecycle
 

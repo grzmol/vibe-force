@@ -14,6 +14,7 @@ const { evaluate, DECISION, targetOrg } = require('../scripts/lib/bash-guards.js
 const { evaluateEdit } = require('../scripts/lib/edit-guards.js');
 const { lintXml, apiVersionOf } = require('../scripts/lib/xml-lint.js');
 const { classify, expectedApexTest, expectedLwcTest } = require('../scripts/lib/sf-paths.js');
+const { evaluate: evaluateMcp } = require('../scripts/lib/mcp-guards.js');
 const { isProductionTarget, mergeDeep, FALLBACK } = require('../scripts/lib/config.js');
 
 const config = mergeDeep(FALLBACK, { productionAliases: ['acme-prod', 'prod'] });
@@ -198,6 +199,66 @@ test('classifies Salesforce source into wave-1 slices', () => {
   assert.equal(classify('force-app/main/default/namedCredentials/X.namedCredential-meta.xml').owner, 'sf-integration-engineer');
   assert.equal(classify('force-app/main/default/classes/ATest.cls').isTest, true);
   assert.equal(classify('node_modules/foo/index.js').generated, true);
+});
+
+test('integration metadata directories match the official metadata registry', () => {
+  // ExternalServiceRegistration lives in externalServiceRegistrations/, not externalServices/;
+  // ExternalClientApplication in externalClientApps/. A wrong directory name matches nothing, so
+  // the path has no owner and the collision guard has nothing to enforce.
+  assert.equal(
+    classify('force-app/main/default/externalServiceRegistrations/Billing.externalServiceRegistration-meta.xml').owner,
+    'sf-integration-engineer'
+  );
+  assert.equal(classify('force-app/main/default/externalClientApps/Portal.eca-meta.xml').owner, 'sf-integration-engineer');
+  assert.equal(classify('force-app/main/default/dataSources/Ledger.dataSource-meta.xml').owner, 'sf-integration-engineer');
+});
+
+/* ---------- mcp guard ---------- */
+
+test('an MCP deploy to production is denied, and to a scratch org is not', () => {
+  const deny = evaluateMcp('mcp__salesforce-dx__deploy_metadata', { usernameOrAlias: 'acme-prod' }, { config });
+  assert.equal(deny.decision, 'deny');
+  assert.equal(deny.rule, 'mcp-prod-deploy');
+  assert.match(deny.reason, /deploy-validate/);
+
+  const dev = evaluateMcp('mcp__salesforce-dx__deploy_metadata', { usernameOrAlias: 'acme-dev' }, { config, gate: { status: 'pass' } });
+  assert.equal(dev.decision, 'pass');
+});
+
+test('an MCP deploy without a passing local gate is noted, not blocked', () => {
+  const v = evaluateMcp('mcp__salesforce-dx__deploy_metadata', { usernameOrAlias: 'acme-dev' }, { config });
+  assert.equal(v.decision, 'note');
+  assert.match(v.reason, /local gate/);
+});
+
+test('the production alias is found wherever it sits in the arguments', () => {
+  const nested = evaluateMcp('mcp__salesforce-dx__delete_org', { target: { org: { alias: 'prod' } } }, { config });
+  assert.equal(nested.decision, 'deny');
+  assert.equal(nested.rule, 'mcp-prod-org-delete');
+
+  const perms = evaluateMcp('mcp__salesforce-dx__assign_permission_set', { permissionSetName: 'X', usernameOrAlias: 'acme-prod' }, { config });
+  assert.equal(perms.decision, 'ask');
+});
+
+test('read-only MCP tools and non-MCP tools pass untouched', () => {
+  assert.equal(evaluateMcp('mcp__salesforce-dx__run_soql_query', { usernameOrAlias: 'acme-prod' }, { config }).decision, 'pass');
+  assert.equal(evaluateMcp('mcp__salesforce-dx__list_all_orgs', {}, { config }).decision, 'pass');
+  assert.equal(evaluateMcp('Bash', { command: 'sf project deploy start -o acme-prod' }, { config }).decision, 'pass');
+});
+
+test('retrieving metadata over MCP warns that it bypasses path ownership', () => {
+  const v = evaluateMcp('mcp__salesforce-dx__retrieve_metadata', { usernameOrAlias: 'acme-dev' }, { config });
+  assert.equal(v.decision, 'note');
+  assert.match(v.reason, /edit guard/);
+});
+
+test('Agentforce and Data Cloud metadata has an owner', () => {
+  assert.equal(classify('force-app/main/default/bots/Support.bot-meta.xml').owner, 'sf-metadata-engineer');
+  assert.equal(classify('force-app/main/default/aiAuthoringBundles/Support/Support.agent').owner, 'sf-metadata-engineer');
+  assert.equal(classify('force-app/main/default/genAiFunctions/Refund/Refund.genAiFunction-meta.xml').owner, 'sf-metadata-engineer');
+  assert.equal(classify('force-app/main/default/dataStreamDefinitions/Orders.dataStreamDefinition-meta.xml').owner, 'sf-metadata-engineer');
+  // the Apex behind an agent action is still the Apex engineer's file
+  assert.equal(classify('force-app/main/default/classes/RefundAction.cls').owner, 'sf-apex-engineer');
 });
 
 test('derives expected test paths', () => {

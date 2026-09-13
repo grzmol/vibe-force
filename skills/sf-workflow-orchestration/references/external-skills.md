@@ -27,7 +27,7 @@ syntax is denied too. Neither is a special case; the guards do not know where a 
 
 | Plugin | Wave | Called by | Produces | Gated by |
 | --- | --- | --- | --- | --- |
-| `integration` | 1 | `sf-integration-engineer` | `namedCredentials/`, `externalCredentials/`, `externalServices/`, `connectedApps/`, `platformEventChannels/` | `vf-check static --changed`, then wave 2 |
+| `integration` | 1 | `sf-integration-engineer` | `namedCredentials/`, `externalCredentials/`, `externalServiceRegistrations/`, `externalClientApps/`, `platformEventChannels/` | `vf-check static --changed`, then wave 2 |
 | `platform-trust-security` | 0 or 1 | `sf-security-reviewer` (advice), `sf-metadata-engineer` (edits) | encrypted field settings, archive configuration | `vf-check local --changed` |
 | `platform-lightning-widgets` | 1 | `sf-lwc-engineer` | `lwc/`, Lightning Type bundles | `vf-check jest --files ...` |
 | `experience-react` | 1 | `sf-lwc-engineer` | `uiBundles/**` | its own toolchain; see "Unowned paths" |

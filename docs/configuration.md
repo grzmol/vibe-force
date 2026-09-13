@@ -43,6 +43,8 @@ Objects merge deeply; arrays are replaced wholesale.
 | `VF_ALLOW_PROD=1` | Clears `hooks.blockProductionDeploy` and lets org-touching checks target a production alias. Intended for a human, per shell, per release |
 | `VF_SKIP_CHECKS=1` | Skips the `Stop` gate. Use when the gate itself is broken, not to escape a finding |
 | `VF_DEBUG=1` | Hook handlers print stack traces to stderr |
+| `VF_MCP_ORGS` | Orgs the bundled Salesforce DX MCP server may reach; default `DEFAULT_TARGET_ORG`. Accepts aliases, usernames, `DEFAULT_TARGET_DEV_HUB`, or `ALLOW_ALL_ORGS` |
+| `VF_MCP_TOOLSETS` | MCP toolsets to enable; default `core,data,code-analysis,testing`. Adding `metadata` enables `deploy_metadata` and `retrieve_metadata`, which `pre-mcp-guard` then gates ([docs/mcp.md](mcp.md)) |
 | `CLAUDE_PLUGIN_ROOT` | Set by Claude Code; the plugin root used by hooks and commands |
 | `CLAUDE_PROJECT_DIR` | Set by Claude Code; the fallback project root when the payload carries none |
 | `SF_TARGET_ORG` | Read by the guards as the effective default org when a command omits `--target-org` |
@@ -58,6 +60,8 @@ Objects merge deeply; arrays are replaced wholesale.
 | Session context injection | - | yes | yes | yes |
 | Stop gate | - | - | yes | yes |
 | Deploy without a passing local gate | allowed | allowed | noted | denied |
+| MCP production deny and prompt rules | - | yes | yes | yes |
+| MCP advisory notes (gate skipped, retrieve overwrites) | - | - | yes | yes |
 | Profile-edit prompt | - | - | yes | yes |
 
 `minimal` is the right mode for a research or read-only session: the safety floor stays, the

@@ -23,11 +23,55 @@ const SLICES = {
   },
   metadata: {
     agent: 'sf-metadata-engineer',
-    patterns: [/\/objects\//, /\/permissionsets\//, /\/permissionsetgroups\//, /\/profiles\//, /\/flows\//, /\/layouts\//, /\/flexipages\//, /\/labels\//, /\/settings\//, /\/tabs\//, /\/applications\//, /\/quickActions\//, /\/globalValueSets\//, /\/recordTypes\//]
+    patterns: [
+      /\/objects\//,
+      /\/permissionsets\//,
+      /\/permissionsetgroups\//,
+      /\/profiles\//,
+      /\/flows\//,
+      /\/layouts\//,
+      /\/flexipages\//,
+      /\/labels\//,
+      /\/settings\//,
+      /\/tabs\//,
+      /\/applications\//,
+      /\/quickActions\//,
+      /\/globalValueSets\//,
+      /\/recordTypes\//,
+      // Agentforce: agent definitions are metadata, their actions are Apex and stay in the apex slice
+      /\/bots\//,
+      /\/botVersions\//,
+      /\/aiAuthoringBundles\//,
+      /\/aiEvaluationDefinitions\//,
+      /\/genAiPlanners\//,
+      /\/genAiPlannerBundles\//,
+      /\/genAiPlugins\//,
+      /\/genAiFunctions\//,
+      /\/genAiPromptTemplates\//,
+      // Data Cloud
+      /\/dataStreamDefinitions\//,
+      /\/mktCalcInsightObjectDefs\//
+    ]
   },
   integration: {
     agent: 'sf-integration-engineer',
-    patterns: [/\/namedCredentials\//, /\/externalCredentials\//, /\/externalServices\//, /\/platformEventChannels\//, /\/platformEventChannelMembers\//, /\/remoteSiteSettings\//, /\/connectedApps\//, /\/authproviders\//]
+    // Directory names are the ones in the official metadata registry
+    // (forcedotcom/source-deploy-retrieve, src/registry/metadataRegistry.json), not the type
+    // names: ExternalServiceRegistration lives in externalServiceRegistrations/, and
+    // ExternalClientApplication - the successor to ConnectedApp - in externalClientApps/.
+    // scripts/dev/verify-metadata-dirs.mjs keeps this list honest.
+    patterns: [
+      /\/namedCredentials\//,
+      /\/externalCredentials\//,
+      /\/externalServiceRegistrations\//,
+      /\/externalClientApps\//,
+      /\/dataSources\//,
+      /\/platformEventChannels\//,
+      /\/platformEventChannelMembers\//,
+      /\/remoteSiteSettings\//,
+      /\/connectedApps\//,
+      /\/authproviders\//
+    ]
   }
 };
 

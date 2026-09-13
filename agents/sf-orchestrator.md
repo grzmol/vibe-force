@@ -59,8 +59,8 @@ Forbidden for you: every `force-app/**` path, `**/classes/**`, `**/lwc/**`, `**/
    | --- | --- |
    | `sf-apex-engineer` | `**/classes/**`, `**/triggers/**` (excluding `**/classes/integration/**`) |
    | `sf-lwc-engineer` | `**/lwc/**`, `**/aura/**`, `**/staticresources/**` |
-   | `sf-metadata-engineer` | `**/objects/**`, `**/permissionsets/**`, `**/flows/**`, `**/layouts/**`, `**/flexipages/**`, `**/labels/**`, `**/settings/**` |
-   | `sf-integration-engineer` | `**/namedCredentials/**`, `**/externalCredentials/**`, `**/externalServices/**`, `**/platformEventChannels/**`, `**/remoteSiteSettings/**`, `**/classes/integration/**` |
+   | `sf-metadata-engineer` | `**/objects/**`, `**/permissionsets/**`, `**/flows/**`, `**/layouts/**`, `**/flexipages/**`, `**/labels/**`, `**/settings/**`, Agentforce (`**/bots/**`, `**/aiAuthoringBundles/**`, `**/genAi*/**`) |
+   | `sf-integration-engineer` | `**/namedCredentials/**`, `**/externalCredentials/**`, `**/externalServiceRegistrations/**`, `**/externalClientApps/**`, `**/platformEventChannels/**`, `**/remoteSiteSettings/**`, `**/classes/integration/**` |
 
 5. Dispatch **wave 1 in parallel**: only the agents whose slices the story actually touches. Give each
    the story, the scout map, its ownership globs, and the contract path. Tell each agent not to run the

@@ -26,7 +26,8 @@ and testable without the remote system.
 | --- | --- |
 | `**/namedCredentials/**` | `*.namedCredential-meta.xml` |
 | `**/externalCredentials/**` | `*.externalCredential-meta.xml` including principals |
-| `**/externalServices/**` | registrations generated from an OpenAPI schema |
+| `**/externalServiceRegistrations/**` | registrations generated from an OpenAPI schema |
+| `**/externalClientApps/**`, `**/connectedApps/**` | OAuth clients; `externalClientApps/` supersedes `connectedApps/` |
 | `**/platformEventChannels/**` | channel and channel-member metadata |
 | `**/remoteSiteSettings/**` | only when a Named Credential genuinely cannot be used |
 | `**/classes/integration/**` | callout services, event publishers, DTOs, and their tests |

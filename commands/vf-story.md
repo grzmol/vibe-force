@@ -91,7 +91,7 @@ the metadata engineer implements the configuration instead.
 | `sf-apex-engineer` | `classes/`, `triggers/` |
 | `sf-lwc-engineer` | `lwc/`, `aura/`, `staticresources/` |
 | `sf-metadata-engineer` | `objects/`, `permissionsets/`, `flows/`, `layouts/`, `flexipages/`, `labels/` |
-| `sf-integration-engineer` | `namedCredentials/`, `externalCredentials/`, `externalServices/`, `objects/*/…` platform events, `remoteSiteSettings/` |
+| `sf-integration-engineer` | `namedCredentials/`, `externalCredentials/`, `externalServiceRegistrations/`, `externalClientApps/`, `objects/*/…` platform events, `remoteSiteSettings/` |
 
 Standing instructions for every wave-1 agent:
 

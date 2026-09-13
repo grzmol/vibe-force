@@ -31,7 +31,7 @@ under the consuming project's `.vibeforce/` directory and is disposable.
 | Decision | Reason |
 | --- | --- |
 | Guard rules as pure functions in `scripts/lib`, handlers as thin I/O shells | Rules are testable without Claude Code; `tests/hooks.test.mjs` asserts each rule and each handler's stdout contract |
-| Zero npm dependencies | The hooks run on every tool call in every session; an install step or a transitive dependency tree is a liability, not a feature |
+| Zero npm dependencies | The hooks run on every tool call in every session; an install step or a transitive dependency tree is a liability, not a feature. The Salesforce DX MCP server in `.mcp.json` is the one exception: Claude Code runs it through `npx` in the user's environment, and no hook or check imports it |
 | One check runner instead of per-agent commands | Agents, hooks, humans and CI must gate on exactly the same thing; divergence between "what CI runs" and "what the agent ran" is the classic pipeline failure |
 | Ownership enforced by a hook, not by prompt discipline | Prompt discipline degrades over a long session; a `deny` does not |
 | State in files, not in context | Claims, gate results, validated job ids and touched files survive compaction, subagent boundaries and session restarts |
@@ -63,6 +63,24 @@ model calls Write(force-app/.../classes/AccountsService.cls)
         exit 0 -> record pass; exit 1 -> block the turn with the findings
         exit 2/3 -> note and pass (tooling problem, not a code problem) unless mode=strict
 ```
+
+## Request flow: an MCP tool call
+
+```
+model calls mcp__salesforce-dx__deploy_metadata(usernameOrAlias: acme-prod)
+   -> PreToolUse hook: pre-mcp-guard.js        matcher mcp__.*
+        loadConfig()               same project config as every other guard
+        parseToolName()            server = salesforce-dx, tool = deploy_metadata
+        productionTarget(input)    any string argument, any depth, matching productionAliases
+        rules in mcp-guards.js     deny: MCP deploys leave no validated job id
+   -> tool never executes
+```
+
+An MCP server reaches the org without going through Bash, so `pre-bash-guard` never sees the call
+and the production rails would otherwise have a side door. The same applies to writes:
+`retrieve_metadata` puts files on disk without a `Write` tool call, so no ownership claim is
+checked - the guard notes it instead of silently allowing a wave-1 collision. Scope, toolsets and
+the full rule table: [MCP](mcp.md).
 
 ## Wave model
 

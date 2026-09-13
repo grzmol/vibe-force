@@ -24,7 +24,7 @@ used. If none resolves, review the uncommitted working tree instead and state th
 
 Classify the changed files into slices so each reviewer knows what it is looking at: Apex (`classes/`,
 `triggers/`), LWC and Aura (`lwc/`, `aura/`), metadata (`objects/`, `permissionsets/`, `flows/`, `layouts/`,
-`flexipages/`), integration (`namedCredentials/`, `externalCredentials/`, `externalServices/`,
+`flexipages/`), integration (`namedCredentials/`, `externalCredentials/`, `externalServiceRegistrations/`,
 `remoteSiteSettings/`), and tests.
 
 If the diff is empty, say so and stop.

@@ -83,9 +83,9 @@ it touches a shared org.
 | | |
 | --- | --- |
 | **11 agents** | An orchestrator, a scout, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
-| **29 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification, org security audit and technical debt audit - plus five on fflib / Apex Enterprise Patterns |
+| **31 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification, org security audit, technical debt audit, Agentforce and Data Cloud - plus five on fflib / Apex Enterprise Patterns |
 | **12 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
-| **7 hooks** | Session context, Bash guard, edit guard, post-edit checks, claim release, stop gate, compaction notes |
+| **8 hooks** | Session context, Bash guard, edit guard, MCP guard, post-edit checks, claim release, stop gate, compaction notes |
 
 Every skill is grounded in official Salesforce documentation and ships reference tables, not just
 prose. Nothing invents a limit, a flag or a rule id.
@@ -154,9 +154,26 @@ hint, so you can adopt the plugin before you adopt every linter.
 | `--no-verify`, force push to a protected branch | Fix the gate |
 | Credentials passed on the command line | Auth files and environment variables |
 | Writes outside an agent's slice, or to a file another agent holds | Wait for the wave, or ask the owner |
+| `deploy_metadata` to production over MCP, `delete_org` on a production alias | The same validate + quick-deploy path; MCP tools do not get a side door ([docs/mcp.md](docs/mcp.md)) |
 
 Four modes - `off`, `minimal`, `standard` (default), `strict`. Per-shell overrides:
 `VF_HOOK_MODE`, `VF_ALLOW_PROD=1`, `VF_SKIP_CHECKS=1`, `VF_DEBUG=1`.
+
+## MCP
+
+The plugin ships the official Salesforce DX MCP server (`@salesforce/mcp`), scoped to your default
+org and to read-and-analyse toolsets: `core,data,code-analysis,testing`. Deploy tools are off by
+default, so deploys stay on the gated CLI path.
+
+```bash
+export VF_MCP_TOOLSETS="core,data,metadata,testing"   # opt into deploy and retrieve
+export VF_MCP_ORGS="acme-dev,acme-uat"                # pin to explicit aliases
+```
+
+MCP tools reach an org without going through Bash, so they get their own guard: a production
+`deploy_metadata` or `delete_org` is denied, a deploy with no passing local gate is flagged, and
+`retrieve_metadata` is flagged for writing files behind the ownership guard. Rules, tool table and
+verification: [docs/mcp.md](docs/mcp.md).
 
 ## Configure
 
@@ -187,6 +204,7 @@ Every key, with defaults and effects: [docs/configuration.md](docs/configuration
 | [Configuration](docs/configuration.md) | Config reference, gates, hook modes, environment overrides |
 | [Architecture](docs/architecture.md) | Waves, path ownership, hook and check internals |
 | [Salesforce-authored skills](docs/salesforce-skills.md) | The Salesforce plugins this marketplace links, what they cover, why nothing is copied |
+| [MCP](docs/mcp.md) | The bundled Salesforce DX MCP server, its scope, and the guard over its tools |
 
 ## Contributing
 

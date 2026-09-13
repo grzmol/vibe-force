@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "salesforce-dx": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@salesforce/mcp",
+        "--orgs",
+        "${VF_MCP_ORGS:-DEFAULT_TARGET_ORG}",
+        "--toolsets",
+        "${VF_MCP_TOOLSETS:-core,data,code-analysis,testing}",
+        "--no-telemetry"
+      ]
+    }
+  }
+}

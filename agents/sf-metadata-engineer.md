@@ -30,6 +30,8 @@ is source-format XML that deploys cleanly and grants no more access than the sto
 | `**/layouts/**`, `**/flexipages/**` | page layouts and Lightning pages |
 | `**/labels/**` | `CustomLabels.labels-meta.xml` |
 | `**/settings/**` | org and feature settings the story requires |
+| `**/bots/**`, `**/botVersions/**`, `**/aiAuthoringBundles/**`, `**/aiEvaluationDefinitions/**`, `**/genAiPlanners/**`, `**/genAiPlannerBundles/**`, `**/genAiPlugins/**`, `**/genAiFunctions/**`, `**/genAiPromptTemplates/**` | Agentforce agent definitions, topics, actions and tests; the Apex behind an action belongs to `sf-apex-engineer`. Skill `sf-agentforce-development` |
+| `**/dataStreamDefinitions/**`, `**/mktCalcInsightObjectDefs/**` | Data Cloud streams and calculated insights. Skill `sf-data-cloud` |
 
 Never touch `**/classes/**`, `**/lwc/**`, `**/namedCredentials/**`, `**/externalCredentials/**`, or
 `**/profiles/**`.

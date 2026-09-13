@@ -106,8 +106,8 @@ paths, and its non-goals. Typical split:
 | --- | --- | --- |
 | `sf-apex-engineer` | `**/classes/**`, `**/triggers/**` | `classes/integration/**`, LWC, object metadata |
 | `sf-lwc-engineer` | `**/lwc/**`, `**/aura/**`, `**/staticresources/**` | Apex, metadata XML |
-| `sf-metadata-engineer` | `**/objects/**`, `**/permissionsets/**`, `**/flows/**`, `**/layouts/**`, `**/flexipages/**`, `**/labels/**` | Apex, LWC, named credentials |
-| `sf-integration-engineer` | `**/namedCredentials/**`, `**/externalCredentials/**`, `**/externalServices/**`, `**/platformEventChannels/**`, `classes/integration/**` | everything else |
+| `sf-metadata-engineer` | `**/objects/**`, `**/permissionsets/**`, `**/flows/**`, `**/layouts/**`, `**/flexipages/**`, `**/labels/**`, Agentforce and Data Cloud definitions | Apex, LWC, named credentials |
+| `sf-integration-engineer` | `**/namedCredentials/**`, `**/externalCredentials/**`, `**/externalServiceRegistrations/**`, `**/externalClientApps/**`, `**/platformEventChannels/**`, `classes/integration/**` | everything else |
 
 Each agent writes its own tests as part of the build (`*Test.cls`, `__tests__/*.test.js`) and
 runs only the narrow check for its own files, for example:
@@ -244,4 +244,4 @@ hand-off report lists changed files, published contracts, check results and resi
 
 Related skills: `sf-minimal-change`, `sf-deployment-strategies`, `sf-post-deploy-verification`,
 `sf-apex-testing`, `sf-lwc-jest-testing`, `sf-code-analyzer-quality`, `sf-security-model`,
-`sf-cli-operations`, `sf-project-structure`.
+`sf-cli-operations`, `sf-project-structure`, `sf-agentforce-development`, `sf-data-cloud`.

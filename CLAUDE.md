@@ -6,12 +6,14 @@ project's sessions behave, so the bar is: deterministic, dependency-free, and te
 ## Invariants
 
 - **No npm dependencies.** Hooks and checks use `node:` builtins only. `scripts/lib` and
-  `scripts/hooks` are CommonJS `.js`; `scripts/checks` is ESM `.mjs`. Node >= 20.
+  `scripts/hooks` are CommonJS `.js`; `scripts/checks` is ESM `.mjs`. Node >= 20. The one npm
+  package the plugin references is the Salesforce DX MCP server in `.mcp.json`, which Claude Code
+  runs through `npx` in the user's environment - never imported by a hook or a check.
 - **Hooks fail open.** A handler that throws must never wedge a session: `hook-io.main()`
   catches, notes to stderr, and exits 0. Guard *decisions* are pure functions in
   `scripts/lib/*-guards.js` so they can be asserted without spawning Claude Code.
 - **Rule logic lives in libs, I/O lives in handlers.** A new guard is a rule object in
-  `bash-guards.js` or a branch in `edit-guards.js`, plus a test. Handlers stay thin.
+  `bash-guards.js`, `mcp-guards.js`, or a branch in `edit-guards.js`, plus a test. Handlers stay thin.
 - **One source of truth per fact.** Salesforce API version: `config/vibe-force.defaults.json`.
   Path-to-slice ownership: `scripts/lib/sf-paths.js` (`SLICES`), mirrored in
   `skills/sf-workflow-orchestration/references/ownership-matrix.md`. Check list and exit codes:
