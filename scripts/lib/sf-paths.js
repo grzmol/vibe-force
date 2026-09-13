@@ -98,8 +98,16 @@ function normalise(filePath) {
   return String(filePath || '').split(path.sep).join('/');
 }
 
+/**
+ * Authored files that live under a generated directory. The contract and the architecture record
+ * are written by hand by the orchestrator and the architect; everything else under
+ * `.vibeforce/state/` is machine state that a human edit would silently corrupt.
+ */
+const AUTHORED_STATE = ['.vibeforce/state/contract.md', '.vibeforce/state/architecture.md'];
+
 function isGenerated(filePath) {
   const p = normalise(filePath);
+  if (AUTHORED_STATE.some((file) => p === file || p.endsWith(`/${file}`))) return false;
   return GENERATED_DIRS.some((dir) => p.includes(`/${dir}/`) || p.startsWith(`${dir}/`));
 }
 

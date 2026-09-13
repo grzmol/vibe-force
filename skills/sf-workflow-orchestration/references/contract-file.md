@@ -100,6 +100,7 @@ generated: <ISO timestamp> by sf-orchestrator
 
 | Reader | Uses it for |
 | --- | --- |
+| `sf-technical-architect` | produces the Solution shape and Contract inputs sections; reads the contract to avoid contradicting a decision already recorded |
 | wave-1 agents | their slice, the signatures they must match, their non-goals |
 | `sf-test-engineer` | the test plan, the coverage expectations |
 | `sf-quality-gate` | what is deliberate (rejected alternatives) versus accidental |

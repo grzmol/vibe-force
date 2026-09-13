@@ -28,6 +28,8 @@ politeness.
 
 ```
 wave 0  scope      sf-scout (read-only)              -> impact map
+        design     sf-technical-architect (read-only, when the story has a real choice)
+                                                     -> .vibeforce/state/architecture.md
         decide     orchestrator                      -> .vibeforce/state/contract.md
 wave 1  build      sf-apex-engineer      \
                    sf-lwc-engineer        |  one parallel batch, disjoint owned paths
@@ -58,9 +60,9 @@ Rules that make the parallelism safe:
    on each other's half-finished edits. Checks belong to wave 2.
 5. **Gates are blocking.** A wave starts only after the previous wave's gate returned exit 0.
 
-## Wave 0: scope and contract
+## Wave 0: scope, design, contract
 
-Serial, cheap, read-only. Output is two artefacts.
+Serial, read-only, cheap relative to what a wrong design costs in wave 1. Each step feeds the next.
 
 ```bash
 # what the story touches, before any edit
@@ -68,12 +70,30 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/checks/vf-check.mjs" static --changed   # ba
 git log --oneline -10 -- force-app/main/default/classes                     # recent churn in the area
 ```
 
-`sf-scout` returns an impact map: metadata files in scope, existing tests covering them,
-triggers and flows already on the affected objects, integration touch points, and risks.
+**Step 1 - `sf-scout`** returns an impact map: metadata files in scope, existing tests covering
+them, triggers and flows already on the affected objects, integration touch points, and risks.
 
-The orchestrator then applies the **minimal change ladder** (skill `sf-minimal-change`) and
-records the outcome in the contract file: which rung each requirement landed on, which
-alternative was rejected and why. Scope that does not survive the ladder never reaches wave 1.
+**Step 2 - `sf-technical-architect`**, only when the story has more than one defensible design.
+It gets the story and the scout map, and returns decisions with the rejected alternative and the
+binding limit for each. Run it when the story:
+
+| Trigger | Example |
+| --- | --- |
+| changes the data model | a new object, a relationship, a field that carries volume |
+| changes who sees what | OWD, sharing rules, Apex sharing, restriction rules |
+| crosses a system boundary | a callout, an inbound API, an event, middleware, identity |
+| states a non-functional number | row counts, latency, retention, availability |
+| forces a declarative-versus-code call | Flow or trigger, rollup or Apex, External Services or hand-written callout |
+| changes packaging or environments | a new package, a changed promotion path |
+
+Skip it for a typo, a single-file fix, or a story whose design the contract already fixed. An
+architecture run on a story with one defensible design returns one line and costs a turn.
+
+**Step 3 - the orchestrator** applies the **minimal change ladder** (skill `sf-minimal-change`) and
+records the outcome in the contract file: which rung each requirement landed on, which alternative
+was rejected and why. Scope that does not survive the ladder never reaches wave 1. The architect's
+**Contract inputs** go in verbatim; its full record is persisted to
+`.vibeforce/state/architecture.md` so wave 2 can review against the decision, not against taste.
 
 Contract file shape (full template in `references/contract-file.md`):
 

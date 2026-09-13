@@ -25,7 +25,8 @@ Parallel waves are safe only while no two agents can write the same file. This i
 | `**/externalServiceRegistrations/**`, `**/externalClientApps/**`, `**/connectedApps/**`, `**/dataSources/**` | integration | `sf-integration-engineer` | `externalClientApps/` is the successor to `connectedApps/`; directory names follow the metadata registry, not the type names |
 | `**/platformEventChannels/**`, `**/platformEventChannelMembers/**`, `**/remoteSiteSettings/**`, `**/authproviders/**` | integration | `sf-integration-engineer` | |
 | `*Test.cls`, `**/__tests__/**` | tests | wave-1 owner in wave 1, `sf-test-engineer` in wave 2 | ownership hands over at the wave boundary |
-| `.vibeforce/state/**`, `.sfdx/**`, `.sf/**`, `.localdevserver/**`, `node_modules/**` | none | nobody | hook denies all writes |
+| `.vibeforce/state/contract.md`, `.vibeforce/state/architecture.md` | none | orchestrator only | authored, not generated: the two state files the guard lets through. The architect hands its record over; only the orchestrator writes it |
+| `.vibeforce/state/**` otherwise, `.sfdx/**`, `.sf/**`, `.localdevserver/**`, `node_modules/**` | none | nobody | machine state; hook denies all writes, including `ownership.json` |
 | `sfdx-project.json`, `.forceignore`, `package.json`, CI workflows | project | orchestrator only | changing them mid-wave invalidates every sibling's checks |
 
 The same table lives in code at `scripts/lib/sf-paths.js` (`SLICES`). Change one, change both;

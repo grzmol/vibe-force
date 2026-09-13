@@ -88,7 +88,7 @@ Waves exist to make parallelism safe rather than merely concurrent:
 
 | Wave | Shape | Why |
 | --- | --- | --- |
-| 0 scout + contract | serial | Produces the decisions every parallel agent depends on; parallelising it would mean negotiating mid-flight |
+| 0 scout + design + contract | serial | Produces the decisions every parallel agent depends on; parallelising it would mean negotiating mid-flight. `sf-technical-architect` runs here, only when the story has more than one defensible design |
 | 1 build | parallel, disjoint paths | The work is genuinely independent once the contract is fixed |
 | 2 checks | parallel, read-mostly | Tests, static analysis and security review do not conflict |
 | 3 deploy | serial | One org, one deploy; validate then quick deploy is inherently ordered |

@@ -25,7 +25,7 @@ condition fires. `PROJECT` is the current project root; `PLUGIN` is `${CLAUDE_PL
 6. Scope passes the minimal-change ladder in "Wave 0.5" before any build agent is dispatched. Wave-1 agents
    receive a decided solution shape, not a blank slate.
 
-## Wave 0 - scout (serial, one agent)
+## Wave 0 - scout and architecture (serial)
 
 Dispatch `sf-scout` with the story text. It must return, and you must read, before anything else:
 
@@ -35,12 +35,23 @@ Dispatch `sf-scout` with the story text. It must return, and you must read, befo
 - Gaps: what does not exist yet and has to be created.
 - Risks: bulkification, sharing, governor limits, retired API usage.
 
+### 0.2 Architecture (`sf-technical-architect`, only when there is a real choice)
+
+Dispatch it after the scout returns, with the story and the impact map, when the story changes the
+data model or the sharing model, crosses a system boundary, states a volume or latency number,
+forces a declarative-versus-code call, or changes packaging or environments. Skip it for a typo or
+a single-file fix and say so in one line in the contract.
+
+It returns decisions, each with the rejected alternative and the limit that binds it. Persist the
+record verbatim to `.vibeforce/state/architecture.md` and fold its **Contract inputs** into the
+contract below. A rejected option does not come back in wave 1.
+
 Then write `.vibeforce/state/contract.md` yourself. It must contain:
 
 | Section | Content |
 | --- | --- |
 | Story | the story text, restated as acceptance criteria |
-| Solution shape | the ladder result from wave 0.5: the chosen mechanism for each requirement and what was rejected |
+| Solution shape | the ladder result from wave 0.5 plus the architect's decisions: the chosen mechanism for each requirement, what was rejected, and the limit that binds it |
 | Path ownership | the four wave-1 slices and the exact directories each one owns |
 | Apex surface | every class and method signature that another slice calls, with `with sharing` decision |
 | Data surface | object and field API names, types, and the permission set that grants them |

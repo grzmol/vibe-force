@@ -201,6 +201,15 @@ test('classifies Salesforce source into wave-1 slices', () => {
   assert.equal(classify('node_modules/foo/index.js').generated, true);
 });
 
+test('the contract and the architecture record are authored, the rest of the state is not', () => {
+  // The orchestrator has to be able to write the file the whole wave model reads.
+  assert.equal(classify('.vibeforce/state/contract.md').generated, false);
+  assert.equal(classify('.vibeforce/state/architecture.md').generated, false);
+  assert.equal(classify('.vibeforce/state/ownership.json').generated, true);
+  assert.equal(classify('.vibeforce/state/touched.json').generated, true);
+  assert.equal(classify('.vibeforce/reports/local-2026.json').generated, true);
+});
+
 test('integration metadata directories match the official metadata registry', () => {
   // ExternalServiceRegistration lives in externalServiceRegistrations/, not externalServices/;
   // ExternalClientApplication in externalClientApps/. A wrong directory name matches nothing, so

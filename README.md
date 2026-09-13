@@ -59,8 +59,8 @@ project dev dependencies: [docs/installation.md](docs/installation.md).
 `/vf-story` runs the whole thing:
 
 ```
-scout -> contract -> parallel build -> parallel checks -> validate + quick deploy -> org verification
-wave 0              wave 1            wave 2             wave 3                     wave 4
+scout -> design -> contract -> parallel build -> parallel checks -> validate + quick deploy -> org verification
+wave 0                        wave 1            wave 2             wave 3                     wave 4
 ```
 
 You stay in control: the contract is shown before any code is written, and the deploy asks before
@@ -82,7 +82,7 @@ it touches a shared org.
 
 | | |
 | --- | --- |
-| **11 agents** | An orchestrator, a scout, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
+| **12 agents** | An orchestrator, a scout, a technical architect, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
 | **31 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, security model, deployment, packaging, data, debugging, verification, org security audit, technical debt audit, Agentforce and Data Cloud - plus five on fflib / Apex Enterprise Patterns |
 | **12 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
 | **8 hooks** | Session context, Bash guard, edit guard, MCP guard, post-edit checks, claim release, stop gate, compaction notes |

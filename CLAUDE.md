@@ -75,8 +75,18 @@ the operation is inherently safe or `VF_ALLOW_PROD=1` is set.
 node --test tests/                                  # hook engine
 node scripts/checks/vf-check.mjs --help             # runner contract
 jq . .claude-plugin/plugin.json hooks/hooks.json    # manifests parse
-claude plugin validate .                            # agents, skills, commands load
+claude plugin validate .                            # marketplace manifest only: both manifests live here
 node scripts/dev/skill-originality.mjs --corpus /tmp/sf-skills   # no copied external prose
+node scripts/dev/verify-metadata-dirs.mjs           # slice directories exist in the metadata registry
+```
+
+`claude plugin validate .` stops at `.claude-plugin/marketplace.json` and never reaches the agents
+or commands. Frontmatter that fails to parse - an unquoted `:` in a `description` is the usual
+cause - loads at runtime with *every field silently dropped*. Validate the plugin itself:
+
+```bash
+cp -R . /tmp/vfplugin && rm -f /tmp/vfplugin/.claude-plugin/marketplace.json
+claude plugin validate /tmp/vfplugin --strict       # agents, skills, commands
 ```
 
 Manual hook check without a Salesforce project:

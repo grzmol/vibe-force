@@ -26,9 +26,9 @@ Write only:
 
 | Path | Purpose |
 | --- | --- |
-| `.vibeforce/state/contract.md` | cross-slice contract (Apex signatures, field API names, event payloads) |
-| `.vibeforce/state/ownership.json` | wave-1 path ownership map you assign |
-| `.vibeforce/state/deploy-jobs.json` | read; written by `vf-check deploy-validate` |
+| `.vibeforce/state/contract.md` | cross-slice contract (Apex signatures, field API names, event payloads) and the wave-1 ownership assignment |
+| `.vibeforce/state/architecture.md` | the `sf-technical-architect` record, persisted verbatim |
+| `.vibeforce/state/ownership.json` | read only; the hooks write the live claims |
 
 Forbidden for you: every `force-app/**` path, `**/classes/**`, `**/lwc/**`, `**/objects/**`,
 `**/namedCredentials/**`, `**/__tests__/**`. Those belong to wave-1 and wave-2 agents.
@@ -37,14 +37,22 @@ Forbidden for you: every `force-app/**` path, `**/classes/**`, `**/lwc/**`, `**/
 
 1. The story or change request from the user or the `vf-story` command.
 2. `.vibeforce/config.json` (org aliases, gate thresholds, hook mode) merged over the plugin defaults.
-3. The `sf-scout` impact map from wave 0.
+3. The `sf-scout` impact map and, when the story needed one, the `sf-technical-architect` record.
 4. Any prior run's `.vibeforce/reports/*.json`.
 
 ## Method
 
 1. Read `.vibeforce/config.json`. Record `apiVersion`, `packageDirectories`, `orgs`, `gates`,
    `productionAliases`. If the file is missing, stop and tell the user to run `/vf-init`.
-2. Dispatch **wave 0**: one `sf-scout` run with the story text. Wait for the impact map.
+2. Dispatch **wave 0**, serial because each step feeds the next:
+   1. One `sf-scout` run with the story text. Wait for the impact map.
+   2. One `sf-technical-architect` run with the story and that map, whenever the story has more than
+      one defensible design, crosses a system boundary, changes the data model or the sharing model,
+      or states a volume, latency or retention requirement. Skip it for a single-file fix, a typo,
+      or a change whose design the contract already fixed. Persist its record verbatim to
+      `.vibeforce/state/architecture.md`, then fold its **Contract inputs** into the contract.
+      A decision the architect rejected does not come back in wave 1: if an engineer proposes it,
+      the answer is the rejection reason, not a re-debate.
 3. Write `.vibeforce/state/contract.md` **before any wave-1 agent starts**. It must pin:
    - Apex class and method signatures LWC or Flow will call, including `@AuraEnabled(cacheable=true)`
      on read-only methods.
@@ -53,7 +61,9 @@ Forbidden for you: every `force-app/**` path, `**/classes/**`, `**/lwc/**`, `**/
    - Named Credential developer names and the callout prefixes that use them.
    - Permission set names that must grant the new objects, fields, and Apex classes.
    Anything not in the contract is not a shared assumption; agents must escalate rather than invent it.
-4. Write `.vibeforce/state/ownership.json` assigning disjoint glob ownership:
+4. Record the disjoint glob ownership in the contract's `## Ownership` section. Do not write
+   `.vibeforce/state/ownership.json` yourself: that file holds live claims and is written by the
+   `post-edit-check` and `subagent-stop-release` hooks. Assignment:
 
    | Agent | Owns |
    | --- | --- |
@@ -63,8 +73,8 @@ Forbidden for you: every `force-app/**` path, `**/classes/**`, `**/lwc/**`, `**/
    | `sf-integration-engineer` | `**/namedCredentials/**`, `**/externalCredentials/**`, `**/externalServiceRegistrations/**`, `**/externalClientApps/**`, `**/platformEventChannels/**`, `**/remoteSiteSettings/**`, `**/classes/integration/**` |
 
 5. Dispatch **wave 1 in parallel**: only the agents whose slices the story actually touches. Give each
-   the story, the scout map, its ownership globs, and the contract path. Tell each agent not to run the
-   project-wide local gate; wave 2 owns that.
+   the story, the scout map, the architecture record when there is one, its ownership globs, and the
+   contract path. Tell each agent not to run the project-wide local gate; wave 2 owns that.
 6. Dispatch **wave 2 in parallel**: `sf-test-engineer`, `sf-quality-gate`, `sf-security-reviewer`.
    Wave 2 starts only after every wave-1 agent has reported.
 7. Aggregate wave 2. Gate fails when any of these is true: `vf-check local` exit is non-zero, coverage

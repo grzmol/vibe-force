@@ -3,7 +3,7 @@
 Per-wave dispatch briefs, inputs, and hand-off formats. Copy the briefs; they are written to be
 pasted into an agent task with the story text substituted.
 
-## Wave 0: scope and contract (serial)
+## Wave 0: scope, design, contract (serial)
 
 ### 0.1 Impact map (`sf-scout`, read-only)
 
@@ -33,7 +33,40 @@ Output format:
 Keep it under 80 lines. Cite file:line for every claim.
 ```
 
-### 0.2 Scope decision (orchestrator)
+### 0.2 Architecture decisions (`sf-technical-architect`, read-only)
+
+Run this step only when the story has more than one defensible design: a data-model or sharing
+change, a system boundary, a stated volume or latency number, a declarative-versus-code call, or a
+packaging or environment change. Skip it otherwise and say why in the contract.
+
+Brief:
+
+```
+Story: <story text>
+Impact map: <paste the sf-scout report>
+Target org for read-only facts: <alias, never a production alias>
+Stated non-functional requirements: <volumes, latency, retention, availability, compliance - or "none stated">
+
+Decide the design. Do not edit anything and do not deploy.
+1. Restate the problem: requirement, binding constraints, what is already fixed by the org.
+2. Establish facts before designing: record counts, OWD, installed packages, org limits. Cite the
+   query or the document behind every number; mark anything you could not verify [unverified].
+3. Apply the minimal change ladder before comparing designs.
+4. For each real choice, give: the decision, the option you rejected, why it fails, and the
+   governor or platform limit that binds the choice.
+5. State what breaks first for each decision, at what volume, with what symptom.
+6. Produce Contract inputs concrete enough to paste into the contract: Apex signatures, field API
+   names with types, event payloads, permission set names, Named Credential developer names.
+7. Anything a human must answer goes to Unknowns, never into an assumed number.
+
+Output the fixed hand-off format from your agent definition. Under 150 lines.
+```
+
+The orchestrator persists the record verbatim to `.vibeforce/state/architecture.md` and folds
+**Contract inputs** into the contract. A rejected option does not return in wave 1: an engineer who
+proposes it gets the rejection reason, not a re-debate.
+
+### 0.3 Scope decision (orchestrator)
 
 Apply the minimal change ladder (skill `sf-minimal-change`) to each requirement, then write
 `.vibeforce/state/contract.md` with the decisions, the shared contracts, and the ownership
@@ -47,6 +80,8 @@ Checklist before dispatching wave 1:
 - [ ] Owned path globs are disjoint. Check with the ownership matrix reference.
 - [ ] Baseline is clean: `vf-check static --changed` exits 0 before any edit.
 - [ ] Target org for wave 2/3 named, and it is not a production alias.
+- [ ] Either the architecture record exists and its Contract inputs are in the contract, or the
+      contract states in one line why the story needed no architectural decision.
 
 ## Wave 1: build (parallel, one batch)
 
