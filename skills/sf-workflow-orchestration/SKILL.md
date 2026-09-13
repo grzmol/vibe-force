@@ -239,6 +239,8 @@ hand-off report lists changed files, published contracts, check results and resi
 - `references/gates-and-hooks.md` - every hook, every mode, exit codes, escape hatches.
 - `references/contract-file.md` - contract template, decision log, worked examples.
 - `references/failure-and-rollback.md` - abort conditions per wave, forward-fix vs rollback.
+- `references/external-skills.md` - where Salesforce-authored plugins fit in the waves, who owns
+  generated metadata, DevOps Center versus CLI promotion.
 
 Related skills: `sf-minimal-change`, `sf-deployment-strategies`, `sf-post-deploy-verification`,
 `sf-apex-testing`, `sf-lwc-jest-testing`, `sf-code-analyzer-quality`, `sf-security-model`,

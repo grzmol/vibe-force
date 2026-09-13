@@ -90,6 +90,26 @@ it touches a shared org.
 Every skill is grounded in official Salesforce documentation and ships reference tables, not just
 prose. Nothing invents a limit, a flag or a rule id.
 
+## Salesforce-authored plugins
+
+The same marketplace lists eleven plugins published by Salesforce in
+[`forcedotcom/sf-skills`](https://github.com/forcedotcom/sf-skills), covering the domains
+vibe-force deliberately leaves alone: DevOps Center, integration metadata generation, Shield and
+Archive, platform tracing, Lightning Types, React UI bundles, Experience CMS, Mobile SDK, service
+messaging channels, B2B Commerce, ISV analytics.
+
+```
+/plugin install integration@vibe-force
+/plugin install dx-devops@vibe-force
+```
+
+They are links, not copies: Claude Code fetches them from Salesforce, and no upstream text lives in
+this repository. Upstream declares Apache-2.0 for the repository and CC-BY-NC-4.0 for the npm
+package that publishes the same skills, so vibe-force points at it and writes its own skills from
+official Salesforce documentation - proven by `scripts/dev/skill-originality.mjs`. The plugins that
+would collide with the vibe-force core are deliberately not listed. Full rationale, routing table
+and pinning instructions: [docs/salesforce-skills.md](docs/salesforce-skills.md).
+
 ## The checks
 
 The same runner is used by agents, hooks, you, and CI:
@@ -166,6 +186,7 @@ Every key, with defaults and effects: [docs/configuration.md](docs/configuration
 | [Installation](docs/installation.md) | Prerequisites, marketplace and local install, project setup |
 | [Configuration](docs/configuration.md) | Config reference, gates, hook modes, environment overrides |
 | [Architecture](docs/architecture.md) | Waves, path ownership, hook and check internals |
+| [Salesforce-authored skills](docs/salesforce-skills.md) | The Salesforce plugins this marketplace links, what they cover, why nothing is copied |
 
 ## Contributing
 
@@ -173,6 +194,7 @@ Every key, with defaults and effects: [docs/configuration.md](docs/configuration
 node --test tests/                  # hook engine suite
 node scripts/checks/vf-check.mjs --help
 claude plugin validate .            # manifest, agents, skills, commands
+node scripts/dev/skill-originality.mjs --corpus /tmp/sf-skills   # no copied external prose
 ```
 
 The plugin has no npm dependencies and uses Node builtins only. Hooks fail open: a broken handler

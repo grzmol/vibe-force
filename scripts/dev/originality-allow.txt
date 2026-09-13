@@ -1,0 +1,25 @@
+# Reviewed factual overlaps with the external skill corpus (see docs/salesforce-skills.md).
+#
+# Each line is a maximal normalised phrase. A shared sequence is suppressed when it falls inside
+# one. Only facts belong here - published limits, enumerations, official document titles, UI field
+# labels. Never add a sentence of explanation, an argument, or an example that was written by
+# someone else: those are exactly what this gate exists to catch.
+#
+# Format: lowercase words separated by single spaces, as printed by the script.
+
+# Citation of an official Salesforce document: its title and its URL.
+salesforce cli setup guide https developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm salesforce dx developer guide
+
+# Connected App setup field labels, as they appear in Setup.
+api enable oauth settings enable oauth callback url
+policies permitted users admin approved users are pre-authorized
+
+# Code Analyzer severity scale: a fixed enumeration defined by the tool.
+severity 1 critical 2 high 3 moderate 4 low 5 info and
+
+# Published platform limits.
+only the first 255 characters of any field
+cpu time 10 000 ms 60 000 ms
+
+# Behaviour of the lightning-record-form base component, stated as a fact.
+uses the object s default record layout with

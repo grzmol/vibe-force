@@ -19,7 +19,14 @@ project's sessions behave, so the bar is: deterministic, dependency-free, and te
 - **Salesforce CLI v2 only.** `sf ...` with an explicit `--target-org`. Retired `sfdx force:*`
   syntax appears only inside a documented migration table.
 - **No third-party plugin references.** Skills, agents, commands and docs stand on official
-  Salesforce documentation. Do not cite other Claude Code plugins as prior art.
+  Salesforce documentation. Do not cite other Claude Code plugins as prior art. The marketplace
+  may *link* Salesforce-authored plugins from `forcedotcom/sf-skills` (see
+  `docs/salesforce-skills.md`); linking is not citing.
+- **Never copy external skill text.** Upstream declares Apache-2.0 in `LICENSE.txt` and
+  CC-BY-NC-4.0 in the npm package publishing the same `skills/` tree. Nothing from it, or from any
+  other skill corpus, is pasted here - not prose, not tables, not scripts. Prove it:
+  `node scripts/dev/skill-originality.mjs --corpus <clone>` must exit 0. Fix a hit by rewriting
+  from the documentation; `scripts/dev/originality-allow.txt` takes reviewed facts only.
 - **Tests gate every change.** `node --test tests/` must pass. A new guard rule without a test
   that fails before the rule existed is not done.
 
@@ -67,6 +74,7 @@ node --test tests/                                  # hook engine
 node scripts/checks/vf-check.mjs --help             # runner contract
 jq . .claude-plugin/plugin.json hooks/hooks.json    # manifests parse
 claude plugin validate .                            # agents, skills, commands load
+node scripts/dev/skill-originality.mjs --corpus /tmp/sf-skills   # no copied external prose
 ```
 
 Manual hook check without a Salesforce project:

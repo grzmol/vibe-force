@@ -5,7 +5,7 @@
     "url": "https://github.com/grzmol"
   },
   "metadata": {
-    "description": "Salesforce development plugins for Claude Code.",
+    "description": "Salesforce development plugins for Claude Code: the vibe-force delivery harness plus curated Salesforce-authored domain plugins for the areas it deliberately does not cover.",
     "version": "0.1.0"
   },
   "plugins": [
@@ -15,6 +15,83 @@
       "description": "Salesforce delivery harness: parallel agent waves, deep Salesforce and fflib skills, deterministic lifecycle hooks, local and post-deploy check gates.",
       "category": "development",
       "keywords": ["salesforce", "apex", "lwc", "fflib", "devops"]
+    },
+    {
+      "name": "dx-devops",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/dx-devops" },
+      "description": "Salesforce-authored. DevOps Center pipelines and work items: pipeline and work-item administration, test-stage configuration, suite runs, failure analysis. Complements vibe-force wave 3, which deploys with the Salesforce CLI instead.",
+      "category": "development",
+      "keywords": ["salesforce", "devops-center", "pipeline", "upstream"]
+    },
+    {
+      "name": "integration",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/integration" },
+      "description": "Salesforce-authored. Generates integration metadata: Named Credentials, External Services, Connected and External Client Apps, Change Data Capture, platform event subscriptions. Pairs with the vibe-force skill sf-integration-patterns, which covers the Apex side.",
+      "category": "development",
+      "keywords": ["salesforce", "named-credential", "external-services", "upstream"]
+    },
+    {
+      "name": "platform-trust-security",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/platform-trust-security" },
+      "description": "Salesforce-authored. Shield Platform Encryption and Salesforce Archive: encrypted field configuration, key management, archive search and restore, retention analysis. Complements the vibe-force skills sf-security-model and sf-org-security-audit.",
+      "category": "security",
+      "keywords": ["salesforce", "shield", "encryption", "archive", "upstream"]
+    },
+    {
+      "name": "platform-observability",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/platform-observability" },
+      "description": "Salesforce-authored. Tracing metadata: EventSettings for TraceSpanEvent publication and Agentforce platform tracing into Data Cloud ingestion.",
+      "category": "development",
+      "keywords": ["salesforce", "tracing", "observability", "upstream"]
+    },
+    {
+      "name": "platform-lightning-widgets",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/platform-lightning-widgets" },
+      "description": "Salesforce-authored. Custom Lightning Types and the widgets that render Agentforce action and MCP tool results.",
+      "category": "development",
+      "keywords": ["salesforce", "lightning-types", "agentforce", "upstream"]
+    },
+    {
+      "name": "experience-react",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/experience-react" },
+      "description": "Salesforce-authored. React UI Bundle apps: scaffold, generate pages and components, configure ui-bundle metadata, host on a Digital Experience site, deploy. Outside the vibe-force LWC slice.",
+      "category": "development",
+      "keywords": ["salesforce", "react", "ui-bundle", "upstream"]
+    },
+    {
+      "name": "experience-cms",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/experience-cms" },
+      "description": "Salesforce-authored. Experience Cloud CMS content: branding, content generation, content and media search.",
+      "category": "development",
+      "keywords": ["salesforce", "experience-cloud", "cms", "upstream"]
+    },
+    {
+      "name": "mobile-development",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/mobile-development" },
+      "description": "Salesforce-authored. Native iOS and Android Mobile SDK apps: scaffolding, authentication, SmartStore and MobileSync offline, biometric login, embedded Agentforce.",
+      "category": "development",
+      "keywords": ["salesforce", "mobile-sdk", "ios", "android", "upstream"]
+    },
+    {
+      "name": "service-engagement",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/service-engagement" },
+      "description": "Salesforce-authored. Service Cloud digital engagement: messaging and chat channels, channel deployments, messaging site integration, Agentforce service channels.",
+      "category": "development",
+      "keywords": ["salesforce", "service-cloud", "messaging", "upstream"]
+    },
+    {
+      "name": "commerce-b2b",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/commerce-b2b" },
+      "description": "Salesforce-authored. B2B Commerce storefront customization with the Open Code storefront library: library integration, definition mapping, component replacement.",
+      "category": "development",
+      "keywords": ["salesforce", "commerce", "b2b", "upstream"]
+    },
+    {
+      "name": "dx-isv-partner",
+      "source": { "source": "github", "repo": "forcedotcom/sf-skills", "path": "plugins/builder/dx-isv-partner" },
+      "description": "Salesforce-authored. ISV and partner operations: App Analytics query requests, AppAnalyticsSettings, partner-offer preferences. Pairs with the vibe-force skill sf-packaging-release.",
+      "category": "development",
+      "keywords": ["salesforce", "isv", "app-analytics", "upstream"]
     }
   ]
 }
