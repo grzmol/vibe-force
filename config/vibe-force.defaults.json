@@ -35,6 +35,10 @@
     "fallbackRef": "HEAD~1",
     "includeWorkingTree": true
   },
+  "xml": {
+    "readMaxBytes": 20000,
+    "outlineDepth": 2
+  },
   "format": {
     "extensions": [
       ".cls",

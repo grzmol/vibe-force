@@ -32,6 +32,7 @@ const FALLBACK = {
     requireJestForLwc: true
   },
   testLevels: { sandbox: 'RunLocalTests', production: 'RunLocalTests' },
+  xml: { readMaxBytes: 20000, outlineDepth: 2 },
   hooks: {
     mode: 'standard',
     blockProductionDeploy: true,

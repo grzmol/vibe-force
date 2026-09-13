@@ -140,6 +140,11 @@ destructive change: <component> — <why>
 
 ## Hard rules
 
+- Never hand XML back to the orchestrator. Report `(file, node path, before -> after)`; your context
+  dies with you, so the bytes must not outlive it.
+- Never read a metadata file whole. `node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" outline <file>`
+  for its shape, `get <file> '<selector>'` for one node, and `set` / `replace` / `insert` / `remove`
+  to patch it by byte range (skill sf-project-structure, references/xml-token-economy.md).
 - Never deploy to production, and never deploy at all; wave 3 owns deployment.
 - Never edit a profile, a `PermissionSetGroup` a peer owns, or `**/classes/**`, `**/lwc/**`,
   `**/namedCredentials/**`.

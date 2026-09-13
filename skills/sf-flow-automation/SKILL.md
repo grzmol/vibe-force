@@ -321,6 +321,7 @@ Debug logs record flow execution under `FLOW_*` markers; log setup is in skill
 - [references/flow-metadata-reference.md](references/flow-metadata-reference.md) - `Flow`, `FlowDefinition`, `FlowTest` fields, trigger type enumerations
 - [references/order-of-execution-for-flows.md](references/order-of-execution-for-flows.md) - the full save sequence, annotated for flow authors
 - [references/invocable-apex.md](references/invocable-apex.md) - `@InvocableMethod` and `@InvocableVariable` rules, recipes, testing
+- [references/workflow-to-flow-migration.md](references/workflow-to-flow-migration.md) - workflow rule to flow mapping tables, the before/after split, `/vf-migrate-workflow`
 
 Sibling skills: `sf-apex-development` (triggers, handler shape, order of execution),
 `sf-minimal-change` (declarative versus code, standard features first), `sf-governor-limits`

@@ -33,6 +33,8 @@ Objects merge deeply; arrays are replaced wholesale.
 | `hooks.blockDestructive` | boolean | `true` | Prompt before `sf project delete source` outside production (always denied on production) |
 | `hooks.autoFormat` | boolean | `true` | Run the project's local `prettier --write` after a write |
 | `hooks.enforceOwnership` | boolean | `true` | Deny writes to a file another live agent claimed |
+| `xml.readMaxBytes` | number | `20000` | Size at which the `xml-bulk-read` guard denies a whole-file read or shell dump of metadata XML and hands back the `vf-xml` command instead. Bounded reads are never blocked. |
+| `xml.outlineDepth` | number | `2` | Default nesting depth for `vf-xml outline`. |
 | `smoke.queries` | string[] | defaults in `config/vibe-force.defaults.json` | Verification SOQL run by `vf-check smoke` |
 
 ## Environment variables
@@ -40,6 +42,7 @@ Objects merge deeply; arrays are replaced wholesale.
 | Variable | Effect |
 | --- | --- |
 | `VF_HOOK_MODE` | Overrides `hooks.mode` for the shell (`off`, `minimal`, `standard`, `strict`) |
+| `VF_XML_READ=1` | Lets one call read a metadata XML file whole, past `xml.readMaxBytes`. Prefer a narrower `vf-xml` selector or a bounded read first. |
 | `VF_ALLOW_PROD=1` | Clears `hooks.blockProductionDeploy` and lets org-touching checks target a production alias. Intended for a human, per shell, per release |
 | `VF_SKIP_CHECKS=1` | Skips the `Stop` gate. Use when the gate itself is broken, not to escape a finding |
 | `VF_DEBUG=1` | Hook handlers print stack traces to stderr |

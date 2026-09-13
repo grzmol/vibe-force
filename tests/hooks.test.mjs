@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const { evaluate, DECISION, targetOrg } = require('../scripts/lib/bash-guards.js');
-const { evaluateEdit } = require('../scripts/lib/edit-guards.js');
+const { evaluateEdit, evaluateRead } = require('../scripts/lib/edit-guards.js');
 const { lintXml, apiVersionOf } = require('../scripts/lib/xml-lint.js');
 const { classify, expectedApexTest, expectedLwcTest } = require('../scripts/lib/sf-paths.js');
 const { evaluate: evaluateMcp } = require('../scripts/lib/mcp-guards.js');
@@ -401,4 +401,47 @@ test('subagent-stop-release drops the finishing agent claims', () => {
   } finally {
     rmSync(project, { recursive: true, force: true });
   }
+});
+
+// --- xml-bulk-read: keep large metadata out of the context window ---------
+
+const xmlConfig = { xml: { readMaxBytes: 20000 }, hooks: {}, gates: {} };
+const PROFILE = 'force-app/main/default/profiles/Admin.profile-meta.xml';
+
+test('evaluateRead denies a whole-file read of large metadata XML', () => {
+  const v = evaluateRead({ filePath: PROFILE, bytes: 180000, config: xmlConfig, mode: 'standard' });
+  assert.equal(v.decision, DECISION.DENY);
+  assert.equal(v.rule, 'xml-bulk-read');
+  // the message has to carry the command that replaces the read
+  assert.match(v.reason, /vf-xml\.js" outline/);
+  assert.match(v.reason, /vf-xml\.js" get/);
+  assert.match(v.reason, /VF_XML_READ=1/);
+});
+
+test('evaluateRead leaves small files, non-metadata and bounded reads alone', () => {
+  assert.equal(evaluateRead({ filePath: PROFILE, bytes: 4000, config: xmlConfig, mode: 'standard' }).decision, DECISION.PASS);
+  assert.equal(evaluateRead({ filePath: 'force-app/main/default/classes/AccountService.cls', bytes: 180000, config: xmlConfig, mode: 'standard' }).decision, DECISION.PASS);
+  assert.equal(evaluateRead({ filePath: PROFILE, bytes: 180000, config: xmlConfig, mode: 'standard', override: true }).decision, DECISION.PASS);
+  assert.equal(evaluateRead({ filePath: PROFILE, bytes: 180000, config: xmlConfig, mode: 'minimal' }).decision, DECISION.PASS);
+});
+
+test('the shell twin blocks an unbounded dump of the same file', () => {
+  const ctx = { config: xmlConfig, mode: 'standard', statBytes: (f) => (f.includes('Admin') ? 180000 : 400) };
+  const denied = evaluate(`cat ${PROFILE}`, ctx);
+  assert.equal(denied.decision, DECISION.DENY);
+  assert.equal(denied.rule, 'xml-bulk-read');
+  assert.equal(evaluate(`less ${PROFILE}`, ctx).decision, DECISION.DENY);
+  assert.equal(evaluate(`cat small.xml`, ctx).decision, DECISION.PASS);
+});
+
+test('the shell twin allows reads that already bound their output', () => {
+  const ctx = { config: xmlConfig, mode: 'standard', statBytes: () => 180000 };
+  for (const cmd of [`head -50 ${PROFILE}`, `head -n 50 ${PROFILE}`, `head -c 800 ${PROFILE}`, `sed -n 1,40p ${PROFILE}`, `tail -20 ${PROFILE}`, `grep fieldPermissions ${PROFILE}`]) {
+    assert.equal(evaluate(cmd, ctx).decision, DECISION.PASS, cmd);
+  }
+});
+
+test('the shell twin cannot decide without a size probe, and fails open', () => {
+  assert.equal(evaluate(`cat ${PROFILE}`, { config: xmlConfig, mode: 'standard' }).decision, DECISION.PASS);
+  assert.equal(evaluate(`cat ${PROFILE}`, { config: xmlConfig, mode: 'minimal', statBytes: () => 180000 }).decision, DECISION.PASS);
 });

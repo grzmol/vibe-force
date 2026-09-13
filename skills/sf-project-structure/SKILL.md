@@ -314,6 +314,7 @@ accurate.
 - [`references/sfdx-project-schema.md`](references/sfdx-project-schema.md) — every property, packaging fields, `replacements` variants, worked examples.
 - [`references/metadata-directory-map.md`](references/metadata-directory-map.md) — metadata type → directory → file suffix → notes, including decomposed children and strict-directory bundles.
 - [`references/forceignore-and-manifests.md`](references/forceignore-and-manifests.md) — `.forceignore` patterns and precedence, `package.xml`, `destructiveChangesPre/Post.xml`, wildcard support.
+- [`references/xml-token-economy.md`](references/xml-token-economy.md) — measuring, reading and patching metadata XML without loading whole files; the `xml-bulk-read` guard and `/vf-xml`.
 - [`references/repo-conventions.md`](references/repo-conventions.md) — branch-per-story, ownership, metadata review checklist, profile policy, monorepo tradeoffs, gitignore companion.
 - Salesforce DX Project Structure and Source Format: <https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_source_file_format.htm>
 - Salesforce DX Project Configuration: <https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm>

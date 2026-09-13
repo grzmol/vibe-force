@@ -5,8 +5,9 @@ project's sessions behave, so the bar is: deterministic, dependency-free, and te
 
 ## Invariants
 
-- **No npm dependencies.** Hooks and checks use `node:` builtins only. `scripts/lib` and
-  `scripts/hooks` are CommonJS `.js`; `scripts/checks` is ESM `.mjs`. Node >= 20. The one npm
+- **No npm dependencies.** Hooks and checks use `node:` builtins only. `scripts/lib`,
+  `scripts/hooks` and the `scripts/vf-*.js` tools are CommonJS `.js`; `scripts/checks` is ESM
+  `.mjs`. Node >= 20. The one npm
   package the plugin references is the Salesforce DX MCP server in `.mcp.json`, which Claude Code
   runs through `npx` in the user's environment - never imported by a hook or a check.
 - **Hooks fail open.** A handler that throws must never wedge a session: `hook-io.main()`
@@ -68,6 +69,15 @@ exit `0` pass, `1` gate failed, `2` misconfiguration or missing tool, `3` org or
 write a report to `.vibeforce/reports/<check>-<ISO>.json`; support `--changed`, `--files`,
 `--target-org`, `--json`, `--project-dir`. Org-touching checks refuse production aliases unless
 the operation is inherently safe or `VF_ALLOW_PROD=1` is set.
+
+## Adding a metadata tool
+
+A `scripts/vf-<name>.js` CLI is for work that is neither a gate nor a hook: it reads or rewrites
+metadata on demand. Contract: CommonJS, a `USAGE` string, `parseArgs`, exit `0` done / `1` the
+answer is "no" / `2` misuse, all logic in a pure `scripts/lib/` module so `tests/` can assert it
+without spawning a process, and a `commands/vf-<name>.md` entry point or the sessions that need it
+will never find it. A tool that writes XML re-checks well-formedness with `xml-lint` before it
+writes, and never reformats bytes outside the range it was asked to change.
 
 ## Local verification
 

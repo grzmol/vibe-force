@@ -9,6 +9,7 @@
  */
 
 const { isProductionTarget } = require('./config');
+const { extractorHint } = require('./edit-guards');
 
 const DECISION = { PASS: 'pass', ASK: 'ask', DENY: 'deny', NOTE: 'note' };
 
@@ -40,7 +41,33 @@ function isSf(segment) {
   return /(^|\s)sf(\s|$)/.test(segment) && !/(^|\s)sfdx(\s|$)/.test(segment);
 }
 
+
+/** Readers that dump a whole file, and the flags that bound their output. */
+const DUMP_READERS = /(^|\s)(cat|less|more|nl|strings|head|tail|sed|awk)\s/;
+const BOUNDED_OUTPUT = /(-n\s*'?\d+|-c\s*\d+|\s-\d+\b|--lines[=\s]\d+|--bytes[=\s]\d+)/;
+
+/** Metadata XML paths named in a shell segment. */
+function xmlPaths(segment) {
+  return (String(segment || '').match(/[^\s'"|>()]+\.xml\b/g) || []).filter((p) => !p.startsWith('-'));
+}
+
 const RULES = [
+  {
+    id: 'xml-bulk-read',
+    match: (s) => DUMP_READERS.test(s) && xmlPaths(s).length > 0,
+    decide: (s, ctx) => {
+      // Economy rule: the shell twin of the Read guard, because `cat` bypasses a Read matcher.
+      if (ctx.mode === 'minimal' || ctx.xmlReadOverride) return { decision: DECISION.PASS };
+      if (BOUNDED_OUTPUT.test(s)) return { decision: DECISION.PASS };
+      if (typeof ctx.statBytes !== 'function') return { decision: DECISION.PASS };
+      const max = Number((ctx.config && ctx.config.xml && ctx.config.xml.readMaxBytes) || 0) || 20000;
+      for (const file of xmlPaths(s)) {
+        const bytes = ctx.statBytes(file);
+        if (bytes > max) return { decision: DECISION.DENY, reason: extractorHint(file, bytes) };
+      }
+      return { decision: DECISION.PASS };
+    }
+  },
   {
     id: 'retired-sfdx-syntax',
     match: (s) => /(^|\s)sfdx\s+force:/.test(s),
@@ -219,4 +246,4 @@ function evaluate(command, ctx) {
   return { decision: DECISION.PASS };
 }
 
-module.exports = { DECISION, RULES, evaluate, segments, targetOrg, jobId };
+module.exports = { DECISION, RULES, evaluate, segments, targetOrg, jobId, xmlPaths };

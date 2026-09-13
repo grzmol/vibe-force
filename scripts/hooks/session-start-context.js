@@ -99,6 +99,10 @@ io.main((f) => {
   if (claims.length) lines.push(`${claims.length} metadata path(s) still claimed by a previous wave; claims expire after 6h`);
 
   lines.push('entry points: /vf-story for the full parallel workflow, /vf-check for gates, /vf-deploy for validate+quick deploy, /vf-verify after deploy');
+  lines.push(
+    `metadata xml: read it with /vf-xml (outline, get, set - whole-file reads over ${Math.round(((config.xml && config.xml.readMaxBytes) || 20000) / 1024)} kB are denied), ` +
+      'migrate workflow rules with /vf-migrate-workflow'
+  );
 
   return io.addContext(io.EVENT_KEYS.SessionStart, `vibe-force context\n${lines.map((l) => `- ${l}`).join('\n')}`);
 });

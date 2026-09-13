@@ -8,6 +8,9 @@
  * hook bypasses. Rule logic lives in scripts/lib/bash-guards.js.
  */
 
+const fs = require('node:fs');
+const path = require('node:path');
+
 const io = require('../lib/hook-io');
 const { loadConfig, modeEnabled } = require('../lib/config');
 const guards = require('../lib/bash-guards');
@@ -17,7 +20,7 @@ io.main((f) => {
   if (f.tool !== 'Bash' && f.tool !== 'PowerShell') return io.pass();
   if (!f.command) return io.pass();
 
-  const { config, stateDir } = loadConfig(f.projectDir || f.cwd);
+  const { config, projectRoot, stateDir } = loadConfig(f.projectDir || f.cwd);
   if (!modeEnabled(config, 'minimal')) return io.pass();
 
   const verdict = guards.evaluate(f.command, {
@@ -25,7 +28,15 @@ io.main((f) => {
     mode: (config.hooks && config.hooks.mode) || 'standard',
     defaultOrg: process.env.SF_TARGET_ORG || '',
     validatedJobs: (state.deployJobs(stateDir).jobs || []),
-    gate: state.getGate(stateDir, f.session)
+    gate: state.getGate(stateDir, f.session),
+    xmlReadOverride: process.env.VF_XML_READ === '1',
+    statBytes: (file) => {
+      try {
+        return fs.statSync(path.isAbsolute(file) ? file : path.join(projectRoot, file)).size;
+      } catch (_) {
+        return 0;
+      }
+    }
   });
 
   if (verdict.decision === guards.DECISION.PASS) return io.pass();

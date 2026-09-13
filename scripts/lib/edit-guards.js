@@ -48,6 +48,46 @@ function qualityNotes(content, info) {
   return applicable.filter((p) => p.re.test(content)).map((p) => ({ id: p.id, note: p.note }));
 }
 
+
+/** Bytes per token for metadata XML, matching xml-nodes.estimateTokens. */
+const BYTES_PER_TOKEN = 3.5;
+
+/**
+ * How to get the same information for a fraction of the tokens.
+ * Kept here so the shell rule and the Read branch quote one text.
+ */
+function extractorHint(target, bytes) {
+  const tool = 'node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js"';
+  return (
+    `${target} is ${Math.round(bytes / 1024)} kB (about ${Math.round(bytes / BYTES_PER_TOKEN)} tokens). ` +
+    `Reading it whole spends the session's context on metadata nobody asked for. Get the structure, then the one node you need:\n` +
+    `  ${tool} outline ${target}\n` +
+    `  ${tool} get ${target} '//fieldPermissions[field=Account.Rating]'\n` +
+    `Patch with set / replace / insert / remove on the same selectors: the file stays byte-identical outside the range addressed, so the diff stays reviewable. ` +
+    `If the whole file really is the task, set VF_XML_READ=1 for that call or raise xml.readMaxBytes.`
+  );
+}
+
+/**
+ * PreToolUse / Read: keep large metadata XML out of the context window.
+ *
+ * Economy rule, not a safety rule, so `minimal` mode opts out and an explicit
+ * VF_XML_READ=1 overrides it.
+ *
+ * @param {{filePath:string, bytes:number, config:object, mode:string, override?:boolean}} args
+ * @returns {{decision:string, reason?:string, rule?:string, notes:string[]}}
+ */
+function evaluateRead(args) {
+  const { filePath, bytes, config, mode, override } = args;
+  const notes = [];
+  if (mode === 'minimal' || override) return { decision: DECISION.PASS, notes };
+  const info = classify(filePath);
+  if (!info.isMetadataXml) return { decision: DECISION.PASS, notes };
+  const max = Number((config && config.xml && config.xml.readMaxBytes) || 0) || 20000;
+  if (!Number.isFinite(bytes) || bytes <= max) return { decision: DECISION.PASS, notes };
+  return { decision: DECISION.DENY, rule: 'xml-bulk-read', notes, reason: extractorHint(info.path, bytes) };
+}
+
 /**
  * @param {object} args
  * @param {string} args.filePath repo-relative or absolute path
@@ -128,4 +168,4 @@ function evaluateEdit(args) {
   return { decision: DECISION.PASS, notes };
 }
 
-module.exports = { DECISION, SECRET_PATTERNS, QUALITY_PATTERNS, evaluateEdit, secretFindings, qualityNotes };
+module.exports = { DECISION, SECRET_PATTERNS, QUALITY_PATTERNS, evaluateEdit, evaluateRead, extractorHint, secretFindings, qualityNotes };
