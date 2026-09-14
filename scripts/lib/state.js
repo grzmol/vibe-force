@@ -151,6 +151,17 @@ function validatedJobFor(stateDir, targetOrg) {
     .sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0))[0];
 }
 
+/* ---------- Setup gate records ---------- */
+
+/**
+ * The metadata-first verdicts `vf-setup check` recorded. The MCP browser rules read them to tell a
+ * gated Setup navigation from an unreviewed one; an unreadable file is an empty list, never a throw.
+ */
+function setupGate(stateDir) {
+  const parsed = read(stateDir, 'setup-gate.json', { entries: [] });
+  return Array.isArray(parsed && parsed.entries) ? parsed.entries : [];
+}
+
 module.exports = {
   CLAIM_TTL_MS,
   ensureDir,
@@ -167,5 +178,6 @@ module.exports = {
   setGate,
   getGate,
   deployJobs,
-  validatedJobFor
+  validatedJobFor,
+  setupGate
 };

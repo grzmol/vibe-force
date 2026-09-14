@@ -39,6 +39,11 @@
     "readMaxBytes": 20000,
     "outlineDepth": 2
   },
+  "setup": {
+    "handoffTtlSeconds": 120,
+    "describeCacheHours": 24,
+    "destinations": {}
+  },
   "format": {
     "extensions": [
       ".cls",

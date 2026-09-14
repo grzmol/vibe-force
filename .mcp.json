@@ -11,6 +11,23 @@
         "${VF_MCP_TOOLSETS:-core,data,code-analysis,testing}",
         "--no-telemetry"
       ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--headless",
+        "--isolated",
+        "--browser",
+        "${VF_BROWSER:-chrome}",
+        "--output-dir",
+        ".vibeforce/state/browser",
+        "--timeout-navigation",
+        "90000",
+        "--viewport-size",
+        "1440x900"
+      ]
     }
   }
 }

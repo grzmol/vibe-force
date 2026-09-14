@@ -36,72 +36,10 @@ survives a deploy, and it spends your context window on XML nobody reads.
   operations on production and secrets on the command line are blocked - over Bash and over MCP.
 - **A green deploy is not the finish line.** After the deploy, agents probe the real org: smoke
   Apex, verification queries, limits, fresh error logs.
-- **~19x less context spent reading metadata.** Measured on Salesforce's own sample apps: the
-  26 336 tokens one story reads as whole files cost 1 403 through `vf-xml`.
-  [How it works and what it saves](#the-metadata-token-bill).
-
-## The metadata token bill
-
-Salesforce metadata, not Apex, is what drains a session: one profile can outweigh every Apex class
-it grants access to. Where a story that grants a field, checks a profile, inspects two flows and
-reads one layout spends its reading budget:
-
-```mermaid
-pie showData title Metadata tokens one story reads today
-    "Permission set" : 12386
-    "Flows (2)" : 6624
-    "Profile" : 6078
-    "Layout" : 1248
-```
-
-Permission sets and profiles dominate, and neither is ever read for more than a few lines of it.
-`vf-xml` indexes a metadata file by byte range, so a session reads structure and single nodes
-instead of files.
-
-```bash
-git ls-files -z '*.xml' | xargs -0 node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" stats | tail   # rank the sinks
-node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" outline <profile>                      # ~40 tokens
-node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" get <profile> '//fieldPermissions[field=Account.Rating]'
-node "$CLAUDE_PLUGIN_ROOT/scripts/vf-xml.js" set <profile> '<selector>' --value true
-```
-
-Measured, not estimated, on metadata published by Salesforce in its own sample apps. "Read whole" is
-the file; "outline + one node" is the structural summary plus the single element an edit actually
-needs. Token counts are bytes over 3.5, the same estimate `vf-xml stats` prints.
-
-| Metadata read | Read whole | outline | + one node | After | Saved | |
-| --- | --- | --- | --- | --- | --- | --- |
-| Permission set, 208 field permissions (`PMT_Global_Admin`) | 12 386 | 219 | 41 | 260 | **48x** | ████████████ |
-| Profile (`GanttChart` `Admin`) | 6 078 | 170 | 44 | 214 | **28x** | ███████ |
-| Record-triggered flow, 3 assignments + 4 decisions (`PMT_Task_Before_Automation`) | 3 312 | 243 | 146 | 389 | **9x** | ██ |
-| Page layout (`PMT_Program__c`) | 1 248 | 151 | - | 151 | **8x** | ██ |
-| Workflow file, 2 rules + 4 field updates, read as a migration plan | 791 | 297 | - | 297 | **3x** | █ |
-
-```
-read whole   ████████████████████████████████████████████████  26 336 tok
-via vf-xml   ██                                                  1 403 tok
-```
-
-Roughly **19x**, or 25 000 tokens of context returned to the actual work, per story. The ratio grows
-with file size, because an outline's cost tracks how many *kinds* of child a file has, not how many
-nodes: 208 field permissions summarise as one line. An enterprise profile is routinely several times
-larger than these samples, and the saving scales with it while the outline barely moves. Whether
-that shows up as cost or as sessions that stop needing compaction depends on where the pressure is.
-
-Patches splice the addressed byte range only, so the file stays byte-identical everywhere else: the
-diff stays reviewable, `vf-check format` stays green, and flow canvas coordinates and Metadata API
-element order survive. The `xml-bulk-read` guard enforces the habit from both sides - a `Read` and a
-shell `cat` of a metadata file over `xml.readMaxBytes` are denied, with the replacement command in
-the denial. Bounded reads (`head -50`, `Read` with a `limit`) always pass.
-
-Workflow rules and Process Builder get the same treatment. `/vf-migrate-workflow plan` classifies
-every rule in a workflow file and `/vf-migrate-process plan` every criteria node in a process,
-without quoting any XML; `convert` emits the before-save flow for what converts mechanically - one
-Assignment on `$Record`, never an Update Records element - and reports the after-save work, the
-scheduled paths and the chaining semantics rather than guessing at them. Method and mapping tables:
-[`xml-token-economy.md`](skills/sf-project-structure/references/xml-token-economy.md),
-[`workflow-to-flow-migration.md`](skills/sf-flow-automation/references/workflow-to-flow-migration.md)
-and [`sf-process-builder-migration`](skills/sf-process-builder-migration/SKILL.md).
+- **~19x less context spent reading metadata.** `vf-xml` indexes a metadata file by byte range, so
+  a story reads an outline plus the single node it edits: the permission set that costs 12 386
+  tokens as a whole file costs 260. Method and measurements:
+  [`xml-token-economy.md`](skills/sf-project-structure/references/xml-token-economy.md).
 
 ## Install
 
@@ -146,16 +84,18 @@ it touches a shared org.
 | `/vf-xml [sub]` | Reads and patches metadata XML by selector instead of loading whole files |
 | `/vf-migrate-workflow` | Classifies workflow rules and converts the mechanical ones to before-save flows |
 | `/vf-migrate-process` | Classifies Process Builder criteria nodes and converts the mechanical ones to before-save flows |
+| `/vf-setup [sub]` | Setup changes with no metadata route: deploy-first gate, one single-use browser hand-off, SetupAuditTrail proof |
 
 ## What ships inside
 
 | | |
 | --- | --- |
 | **12 agents** | An orchestrator, a scout, a technical architect, four build engineers on disjoint paths, test, quality, security, deploy and org-verification specialists |
-| **32 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, Process Builder migration, security model, deployment, packaging, data, debugging, verification, org security audit, technical debt audit, Agentforce and Data Cloud - plus five on fflib / Apex Enterprise Patterns |
+| **34 skills** | Apex, async Apex, governor limits, SOQL/SOSL, LWC, Jest, Flow, Process Builder migration, security model, deployment, packaging, data, debugging, verification, org security audit, technical debt audit, Setup automation, UI test automation, Agentforce and Data Cloud - plus five on fflib / Apex Enterprise Patterns |
 | **13 checks** | One runner, one contract: `format`, `lint`, `analyzer`, `pairing`, `jest`, `static`, `local`, `apex`, `deploy-validate`, `deploy-quick`, `smoke`, `verify`, `all` |
 | **8 hooks** | Session context, Bash guard, edit guard, MCP guard, post-edit checks, claim release, stop gate, compaction notes |
 | **3 metadata tools** | `vf-xml` reads and patches metadata XML by byte range; `vf-workflow-to-flow` and `vf-process-to-flow` convert the workflow rules and processes they can convert and report the rest |
+| **1 Setup tool** | `vf-setup` gates a Setup change on the org's own `describeMetadata`, hands a browser one single-use session instead of a credential, and reads `SetupAuditTrail` back as proof |
 
 Every skill is grounded in official Salesforce documentation and ships reference tables, not just
 prose. Nothing invents a limit, a flag or a rule id.
@@ -228,6 +168,27 @@ export VF_MCP_ORGS="acme-dev,acme-uat"                # pin to explicit aliases
 ```
 
 Rules, tool table and verification: [docs/mcp.md](docs/mcp.md).
+
+## Setup and browser tests
+
+Some org configuration has no Metadata API route at all. `/vf-setup` covers that remainder without
+letting it become drift: it asks the org what it can deploy and refuses the browser when a deploy
+route exists, hands the browser one single-use loopback redirect instead of a frontdoor URL, and
+reads `SetupAuditTrail` back as proof.
+
+```bash
+node "$CLAUDE_PLUGIN_ROOT/scripts/vf-setup.js" check <dest> --target-org acme-dev   # exit 1: deploy it instead
+node "$CLAUDE_PLUGIN_ROOT/scripts/vf-setup.js" audit --target-org acme-dev --since 30m
+```
+
+> **Needs Playwright.** The browser tools come from Microsoft's Playwright MCP server, which Claude
+> Code runs through `npx` in your environment. It uses the Chrome you already have; if you would
+> rather it used its own Chromium, install the browser once with
+> `npx playwright install chromium` and set `VF_BROWSER=chromium`. The server adds browser tools to
+> every session - turn it off with `/mcp` when you are not configuring an org.
+
+Committed UI tests are a different tier and a different skill: UTAM plus WebdriverIO with
+Salesforce's own page objects, in `sf-ui-test-automation`.
 
 ## Configure
 
