@@ -21,7 +21,8 @@ io.main((f) => {
   const verdict = guards.evaluate(f.tool, f.input, {
     config,
     mode: (config.hooks && config.hooks.mode) || 'standard',
-    gate: state.getGate(stateDir, f.session)
+    gate: state.getGate(stateDir, f.session),
+    setupGate: state.setupGate(stateDir)
   });
 
   if (verdict.decision === guards.DECISION.PASS) return io.pass();

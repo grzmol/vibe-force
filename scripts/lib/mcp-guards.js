@@ -12,6 +12,7 @@
  */
 
 const { isProductionTarget } = require('./config');
+const { isCredentialUrl, redactUrl } = require('./setup-session');
 
 const DECISION = { PASS: 'pass', ASK: 'ask', DENY: 'deny', NOTE: 'note' };
 
@@ -48,6 +49,32 @@ function productionTarget(input, config) {
     if (value && isProductionTarget(config, value)) return value;
   }
   return '';
+}
+
+/**
+ * Salesforce org hosts as the documentation spells them: `<mydomain>.my.salesforce.com` (core and
+ * Setup, sandboxes included via `--<name>.sandbox.my.salesforce.com`), `.lightning.force.com`,
+ * `.my.site.com` and `.visualforce.com`. developer.salesforce.com is documentation, not an org.
+ */
+const ORG_HOST = /https?:\/\/[^/\s"']+\.(?:my\.salesforce\.com|lightning\.force\.com|my\.site\.com|visualforce\.com)(?:[:/]|$)/i;
+const SETUP_PATH = /\/lightning\/setup\//i;
+const BROWSER_TOOL = /^browser_/;
+const PAGE_SCRIPT_TOOL = /^browser_(?:evaluate|run_code_unsafe)$/;
+
+function browserUrls(input) {
+  return stringValues(input).filter((v) => /^https?:\/\//i.test(v) || /^\/vf-setup\//.test(v));
+}
+
+function setupGateEntries(ctx) {
+  return Array.isArray(ctx && ctx.setupGate) ? ctx.setupGate : [];
+}
+
+/** A gate record covers a URL when the recorded navigation path appears in it. */
+function gateCovers(ctx, url) {
+  return setupGateEntries(ctx).some((entry) => {
+    const p = entry && typeof entry.path === 'string' ? entry.path.replace(/^\/+/, '') : '';
+    return p && url.includes(p);
+  });
 }
 
 const RULES = [
@@ -126,13 +153,66 @@ const RULES = [
         reason: `${tool} runs tests in the production org ${org}. Test runs consume production limits and execute triggers; confirm this is intended.`
       };
     }
+  },
+  {
+    id: 'browser-credential-url',
+    match: (tool, input) => BROWSER_TOOL.test(tool) && stringValues(input).some((v) => isCredentialUrl(v)),
+    decide: (tool, input) => ({
+      decision: DECISION.DENY,
+      reason:
+        'That URL is a session credential, and a tool argument is transcript. ' +
+        `Saw: ${redactUrl(browserUrls(input)[0] || stringValues(input)[0] || '')}\n` +
+        'Hand the browser a single-use loopback redirect instead:\n' +
+        '  node "$CLAUDE_PLUGIN_ROOT/scripts/vf-setup.js" serve <dest> --target-org <alias>\n' +
+        'then navigate to the http://127.0.0.1:<port>/vf-setup/<token> URL it prints.'
+    })
+  },
+  {
+    id: 'browser-prod-target',
+    match: (tool, input, ctx) => BROWSER_TOOL.test(tool) && Boolean(productionTarget(input, ctx.config)),
+    decide: (tool, input, ctx) => {
+      const target = productionTarget(input, ctx.config);
+      const blocking = !ctx.config || !ctx.config.hooks || ctx.config.hooks.blockProductionDeploy !== false;
+      return {
+        decision: blocking ? DECISION.DENY : DECISION.ASK,
+        reason:
+          `${target} is a production target. Driving production Setup from a browser makes a change ` +
+          'no branch contains and no deploy can reproduce. Do it in a sandbox and deploy the metadata. ' +
+          'If it genuinely has no metadata route, re-run with VF_ALLOW_PROD=1 and say why.'
+      };
+    }
+  },
+  {
+    id: 'browser-setup-ungated',
+    match: (tool, input, ctx) =>
+      BROWSER_TOOL.test(tool) &&
+      browserUrls(input).some((url) => ORG_HOST.test(url) && SETUP_PATH.test(url)) &&
+      !browserUrls(input).every((url) => !SETUP_PATH.test(url) || gateCovers(ctx, url)),
+    decide: () => ({
+      decision: DECISION.NOTE,
+      reason:
+        'Setup page with no metadata-first gate record. Run ' +
+        '`node "$CLAUDE_PLUGIN_ROOT/scripts/vf-setup.js" check <dest> --target-org <alias>` first: if the org ' +
+        'deploys the type that owns this page, clicking it produces drift instead of a deployable change.'
+    })
+  },
+  {
+    id: 'browser-page-script',
+    match: (tool, input, ctx) =>
+      PAGE_SCRIPT_TOOL.test(tool) && (tool === 'browser_run_code_unsafe' || setupGateEntries(ctx).length > 0),
+    decide: (tool) => ({
+      decision: DECISION.ASK,
+      reason:
+        `${tool} runs arbitrary code in a page that holds a logged-in Salesforce session. ` +
+        'Prefer browser_snapshot, browser_click and browser_fill_form, which are auditable actions.'
+    })
   }
 ];
 
 /**
  * @param {string} toolName the raw PreToolUse tool name, e.g. mcp__salesforce-dx__deploy_metadata
  * @param {object} input the tool arguments
- * @param {{config:object, mode?:string, gate?:object}} ctx
+ * @param {{config:object, mode?:string, gate?:object, setupGate?:object[]}} ctx
  * @returns {{decision:string, reason?:string, rule?:string, tool?:string, server?:string}}
  */
 function evaluate(toolName, input, ctx) {
@@ -140,10 +220,11 @@ function evaluate(toolName, input, ctx) {
   const { server, tool, isMcp } = parseToolName(toolName);
   if (!isMcp) return { decision: DECISION.PASS };
 
+  const args = input || {};
   const notes = [];
   for (const rule of RULES) {
-    if (!rule.match(tool)) continue;
-    const result = rule.decide(tool, input || {}, context) || { decision: DECISION.PASS };
+    if (!rule.match(tool, args, context)) continue;
+    const result = rule.decide(tool, args, context) || { decision: DECISION.PASS };
     if (result.decision === DECISION.DENY || result.decision === DECISION.ASK) {
       return { decision: result.decision, reason: result.reason, rule: rule.id, tool, server };
     }
